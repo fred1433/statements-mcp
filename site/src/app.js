@@ -183,7 +183,7 @@
 
   // ---------- checked ----------
   const s = data.summary;
-  $(".summary").innerHTML = `${s.conversations} recorded conversations. <span class="n">${s.figures}</span> figures written by Claude, <span class="n">${s.untraced}</span> that no tool returned. <span class="n">${s.citations}</span> cell citations, <span class="n">${s.bad_citations}</span> wrong. <span class="n">${s.as_expected}</span> of ${s.conversations} behaved as expected, read by a person.`;
+  $(".summary").innerHTML = `${s.conversations} recorded conversations. <span class="n">${s.figures}</span> figures written by Claude, <span class="n">${s.untraced}</span> that no tool returned. <span class="n">${s.citations}</span> cell citations, <span class="n">${s.bad_citations}</span> wrong. <span class="n">${s.as_expected}</span> of ${s.conversations} behaved as expected, read by a person; two were chosen among several recordings, and their note says what the others said.`;
   const tb = $(".ledger tbody");
   const expectWord = { answer: "Answer", refuse: "Refuse", stop: "Stop", boundary: "Say the limit" };
   for (const r of data.ledger) {

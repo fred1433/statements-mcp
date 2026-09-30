@@ -32,7 +32,7 @@ uv run control/check.py           # re-checks the 12 recorded conversations agai
 
 ## Recorded conversations
 
-`control/transcripts/` holds 12 conversations recorded with Claude Code as the MCP client (model `claude-sonnet-5-5`), every tool call and tool result included. `sh control/run.sh` records them again. `control/RESULTS.md` has the counts: 72 figures written in the answers, none untraced; 44 cell citations, none to a cell no tool returned, none with a different figure; behavior graded by a person in `control/grades.json`, with remarks.
+`control/transcripts/` holds 12 conversations recorded with Claude Code as the MCP client (model `claude-sonnet-5-5`), every tool call and tool result included. `sh control/run.sh` records them again. `control/RESULTS.md` has the counts: 72 figures written in the answers, none untraced; 44 cell citations, none to a cell no tool returned, none with a different figure; behavior graded by a person in `control/grades.json`. Two questions (`supplier-prices`, `quarter-so-far`) were recorded several times and the published take was chosen; their grade says what the other takes said.
 
 The server returns source-linked values and deterministic calculations. The published test results separately check Claude's answers for unsupported financial claims. That is a measurement on these 12 answers, not a guarantee about the next one.
 
