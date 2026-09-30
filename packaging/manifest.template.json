@@ -1,0 +1,36 @@
+{
+  "manifest_version": "0.3",
+  "name": "financial-statements",
+  "display_name": "Financial statements (read-only)",
+  "version": "0.2.0",
+  "description": "Lets Claude answer questions on approved income statement exports, every figure cited to its cell.",
+  "long_description": "Reads the approved Excel exports listed in approved.json in one folder. Five read tools, no write tool, no path or SQL input. Blocks an export that fails its checks (changed file, missing reporting unit, totals that do not tie, control totals that do not match). Ships with a synthetic demonstration folder; choose your own exports folder in the settings.",
+  "author": { "name": "fred1433" },
+  "repository": { "type": "git", "url": "https://github.com/fred1433/statements-mcp.git" },
+  "license": "MIT",
+  "server": {
+    "type": "binary",
+    "entry_point": "server/__BINARY__",
+    "mcp_config": {
+      "command": "${__dirname}/server/__BINARY__",
+      "args": [],
+      "env": { "STATEMENTS_DIR": "${user_config.exports_folder}" }
+    }
+  },
+  "user_config": {
+    "exports_folder": {
+      "type": "directory",
+      "title": "Approved exports folder",
+      "description": "The folder holding approved.json and the exports it lists. Leave empty to use the synthetic demonstration data.",
+      "required": false
+    }
+  },
+  "tools": [
+    { "name": "list_snapshots", "description": "Approved exports, their status and failed checks" },
+    { "name": "get_values", "description": "Printed values with their cell references" },
+    { "name": "compare_periods", "description": "Two snapshots side by side, with the change and its input cells" },
+    { "name": "margin_bridge", "description": "Gross margin change split into rate and mix effects" },
+    { "name": "get_report_comments", "description": "Comments written into an approved report" }
+  ],
+  "compatibility": { "platforms": ["__PLATFORM__"] }
+}

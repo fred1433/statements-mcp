@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask Your Financials</title>
+<meta name="description" content="Claude answers questions on approved income statement exports through a read-only MCP server, every figure tied to its cell, and stops when an export cannot support the answer.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <section class="hero" aria-labelledby="title">
+    <div class="ask">
+      <h1 id="title">Ask the income statement. Every figure ties to its cell.</h1>
+      <p class="lede">A read-only MCP server lets Claude read approved month-end exports, show the cell behind each figure, and stop when an export fails its checks.</p>
+      <p class="synthetic">Synthetic demonstration. Workbook structure modeled on documented Management Reporter reporting concepts; not generated from your system or validated against your export layout.</p>
+
+      <div class="questions" role="tablist" aria-label="Recorded questions"></div>
+
+      <article class="answer" aria-live="polite">
+        <div class="answer-meta"></div>
+        <div class="answer-body"></div>
+        <p class="answer-foot"></p>
+      </article>
+    </div>
+
+    <div class="desk" aria-label="The export Claude read">
+      <div class="stack">
+        <div class="books" role="tablist" aria-label="Exports"></div>
+        <div class="paper">
+          <div class="sheet-head"></div>
+          <div class="margin-note" hidden></div>
+          <div class="table-wrap"><table class="statement"></table></div>
+          <div class="sheet-tabs" role="tablist" aria-label="Reporting units"></div>
+        </div>
+      </div>
+      <p class="desk-hint">Select a tick mark in the answer to see the cell it points to.</p>
+    </div>
+  </section>
+
+  <section class="checked" aria-labelledby="checked-title">
+    <h2 id="checked-title">Checked, not trusted</h2>
+    <p class="summary"></p>
+    <p class="claim">The server returns source-linked values and deterministic calculations. The results below separately check Claude's answers for unsupported financial claims: a measurement on these recorded answers, not a guarantee about the next one.</p>
+    <div class="ledger-wrap"><table class="ledger"><colgroup><col class="c-q"><col class="c-e"><col><col class="c-n"><col class="c-n"></colgroup>
+      <thead><tr><th scope="col">Question</th><th scope="col">Expected</th><th scope="col">What Claude did</th><th scope="col" class="num">Figures</th><th scope="col" class="num">Untraced</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section class="plug" aria-labelledby="plug-title">
+    <h2 id="plug-title">On your server, read-only</h2>
+    <ol class="steps">
+      <li><strong>Export and approve.</strong> The controller exports the report to Excel and lists the file in <code>approved.json</code> with its SHA-256 and a few control totals read off the rendered report.</li>
+      <li><strong>Check before reading.</strong> The server refuses a file that changed after approval, misses a reporting unit, has totals that do not tie beyond the written rounding rule, or does not match its control totals.</li>
+      <li><strong>Ask in Claude.</strong> A C# server (.NET 10, official MCP C# SDK 2.2.0) packaged as a Claude Desktop extension. Five read tools; no write tool, no path, no SQL.</li>
+    </ol>
+    <p><strong>Privacy.</strong> The connector runs locally and reads approved exports without modifying them. Returned figures and their report context are sent to Anthropic through Claude; your organization's Claude data policies apply.</p>
+    <p><strong>What this proves, and what it does not.</strong> This demonstrates the connector and its checks on synthetic data. Compatibility with your exports and diagnosis of your report errors require validation on your system. The conversations were recorded with Claude Code as the MCP client; the Windows package is built, not tested on a clean Windows machine.</p>
+    <p class="next"><strong>Next check.</strong> One approved MR export and one failing report: reconcile the known totals, confirm the import mapping, and capture the error before making changes.</p>
+    <p class="links"><a href="https://github.com/fred1433/statements-mcp">Source, tests and transcripts on GitHub</a></p>
+
+    <aside class="errors" aria-labelledby="errors-title">
+      <h3 id="errors-title">If a report error looks like one of these</h3>
+      <dl>
+        <dt>“Object reference not set to an instance of an object” when generating</dt>
+        <dd>An Excel link in the row definition pointing to a CALC column, or a summary level of the tree with a mask in the Dimension column. <a href="https://learn.microsoft.com/en-us/troubleshoot/dynamics/gp/object-reference-not-set-to-instance-of-object-error-when-creating-report-in-management-reporter">KB2976908</a></dd>
+        <dt>“Index was out of range” in the Dimension Value integration task</dt>
+        <dd>Account segment references in GL40200 missing from SY00300 or GL00100. <a href="https://learn.microsoft.com/en-us/troubleshoot/dynamics/gp/management-reporter-2012-data-mart-integration-error-index-was-out-of-range">KB3029952</a></dd>
+        <dt>“A problem in the data provider framework” opening a row or column definition</dt>
+        <dd>A blank, duplicate or reserved name among General Ledger user-defined fields and Analytical Accounting dimensions. <a href="https://learn.microsoft.com/en-us/troubleshoot/dynamics/gp/data-provider-framework-error-in-microsoft-management-reporter-2012-for-dynamics-gp">KB2776705</a></dd>
+        <dt>Process Service stops and restarts continually</dt>
+        <dd>The 32-bit SP3 CLR Types for SQL Server 2012 installed without the 64-bit one. <a href="https://learn.microsoft.com/en-us/troubleshoot/dynamics/gp/management-reporter-2012-process-service-stops-and-restarts-continually">KB3144801</a></dd>
+      </dl>
+      <p>First move: compare one failing report with a working one under the same company, period and user, capture the exact error and its Application event, then check the row, column and tree definitions it points to.</p>
+    </aside>
+  </section>
+</main>
+<footer>
+  <a class="brand" href="https://theaipipe.com"><img src="favicon.svg" alt="" width="18" height="18"> The AI Pipe</a>
+  <span>Built by Frederic de Lavenne de Choulot</span>
+</footer>
+<script src="app.js" defer></script>
+</body>
+</html>

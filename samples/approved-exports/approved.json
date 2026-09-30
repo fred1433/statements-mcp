@@ -1,0 +1,166 @@
+{
+  "company": "Alder & Finch Supply Co.",
+  "report": "Income Statement",
+  "reporting_tree": {
+    "root": "Alder & Finch Supply Co.",
+    "units": [
+      "Wholesale",
+      "Online",
+      "Service"
+    ]
+  },
+  "currency": "USD",
+  "scale": "units",
+  "scenario": "Actual",
+  "row_definition": {
+    "totals": [
+      {
+        "total": "Net sales",
+        "plus": [
+          "Product sales",
+          "Service revenue",
+          "Freight billed to customers",
+          "Sales returns and allowances"
+        ],
+        "minus": []
+      },
+      {
+        "total": "Total cost of sales",
+        "plus": [
+          "Product cost",
+          "Service labor",
+          "Inbound freight",
+          "Inventory adjustments"
+        ],
+        "minus": []
+      },
+      {
+        "total": "Gross profit",
+        "plus": [
+          "Net sales"
+        ],
+        "minus": [
+          "Total cost of sales"
+        ]
+      },
+      {
+        "total": "Total operating expenses",
+        "plus": [
+          "Salaries and wages",
+          "Payroll taxes and benefits",
+          "Sales commissions",
+          "Marketing and advertising",
+          "Outbound shipping",
+          "Rent and occupancy",
+          "Software and technology",
+          "Depreciation",
+          "Other general and administrative"
+        ],
+        "minus": []
+      },
+      {
+        "total": "Operating income",
+        "plus": [
+          "Gross profit"
+        ],
+        "minus": [
+          "Total operating expenses"
+        ]
+      }
+    ],
+    "rates": [
+      {
+        "row": "Gross margin %",
+        "numerator": "Gross profit",
+        "denominator": "Net sales"
+      }
+    ]
+  },
+  "rounding_policy": {
+    "max_difference_per_summed_cell": 1,
+    "explanation": "Line and total cells are rounded to whole dollars separately. A printed total may differ from the sum of the printed cells it adds by up to $1 per cell summed; such differences are reported as rounding. Anything larger blocks the snapshot."
+  },
+  "snapshots": [
+    {
+      "file": "IS_2026-03.xlsx",
+      "period_end": "2026-03-31",
+      "approved_by": "Controller",
+      "approved_on": "2026-04-09",
+      "control_totals": [
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Net sales",
+          "column": "Quarter to Date Actual",
+          "value": 6021218
+        },
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Gross profit",
+          "column": "Quarter to Date Actual",
+          "value": 1691928
+        },
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Operating income",
+          "column": "Quarter to Date Actual",
+          "value": 71734
+        }
+      ],
+      "sha256": "b3b152ac30b0006bae5029ade1380fcbb1dffbd593d3ec02fe740187b515dcdd"
+    },
+    {
+      "file": "IS_2026-06.xlsx",
+      "period_end": "2026-06-30",
+      "approved_by": "Controller",
+      "approved_on": "2026-07-08",
+      "control_totals": [
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Net sales",
+          "column": "Quarter to Date Actual",
+          "value": 6748503
+        },
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Gross profit",
+          "column": "Quarter to Date Actual",
+          "value": 1865328
+        },
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Operating income",
+          "column": "Quarter to Date Actual",
+          "value": 222667
+        }
+      ],
+      "sha256": "e42f0faa32bea6515b7d863a7f27c7ed17ab3a3b143ee0567719bdc36511a768"
+    },
+    {
+      "file": "IS_2026-08.xlsx",
+      "period_end": "2026-08-31",
+      "approved_by": "Controller",
+      "approved_on": "2026-09-09",
+      "control_totals": [
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Net sales",
+          "column": "Quarter to Date Actual",
+          "value": 4506530
+        },
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Gross profit",
+          "column": "Quarter to Date Actual",
+          "value": 1256069
+        },
+        {
+          "unit": "Alder & Finch Supply Co.",
+          "row": "Operating income",
+          "column": "Quarter to Date Actual",
+          "value": 154322
+        }
+      ],
+      "sha256": "ab7aee56c590ab62d6c19ff1095e69c9914f3613841bb11ae134e9d8356cfefe"
+    }
+  ]
+}

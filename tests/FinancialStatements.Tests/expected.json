@@ -1,0 +1,63 @@
+{
+  "values": [
+    {
+      "file": "IS_2026-06.xlsx",
+      "sheet": "Total",
+      "row": "Net sales",
+      "column": "Quarter to Date Actual",
+      "value": 6748503,
+      "ref": "[IS_2026-06.xlsx]Total!C13"
+    },
+    {
+      "file": "IS_2026-06.xlsx",
+      "sheet": "Wholesale",
+      "row": "Gross profit",
+      "column": "Quarter to Date Actual",
+      "value": 1049637,
+      "ref": "[IS_2026-06.xlsx]Wholesale!C20"
+    },
+    {
+      "file": "IS_2026-03.xlsx",
+      "sheet": "Total",
+      "row": "Gross margin %",
+      "column": "Quarter to Date Actual",
+      "value": 0.280994,
+      "ref": "[IS_2026-03.xlsx]Total!C21"
+    },
+    {
+      "file": "IS_2026-06.xlsx",
+      "sheet": "Service",
+      "row": "Freight billed to customers",
+      "column": "Quarter to Date Actual",
+      "value": null,
+      "ref": "[IS_2026-06.xlsx]Service!C11"
+    }
+  ],
+  "bridge": {
+    "company_rate_from": 0.2809943104534664,
+    "company_rate_to": 0.2764061896393911,
+    "units": {
+      "Wholesale": {
+        "rate_from": 0.21927137968809904,
+        "rate_to": 0.22308547192199765,
+        "rate_effect": 0.0026592039855217937,
+        "mix_effect": -0.0028996733090313103
+      },
+      "Online": {
+        "rate_from": 0.3786280760021206,
+        "rate_to": 0.38221490412572595,
+        "rate_effect": 0.0008518476422733869,
+        "mix_effect": -0.003635685516657389
+      },
+      "Service": {
+        "rate_from": 0.458370956604876,
+        "rate_to": 0.4608828448180009,
+        "rate_effect": 0.00016403069966546794,
+        "mix_effect": -0.0017278033576923941
+      }
+    },
+    "rate_effect_total": 0.0036750823274606485,
+    "mix_effect_total": -0.008263162183381093,
+    "units_change": -0.004588079855920468
+  }
+}
