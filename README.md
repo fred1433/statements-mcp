@@ -23,8 +23,8 @@ Stack: C# on .NET 10, official MCP C# SDK `ModelContextProtocol` 2.2.0, ClosedXM
 Needs the .NET 10 SDK and [uv](https://docs.astral.sh/uv/).
 
 ```sh
-dotnet test                       # parser, integrity checks, queries, access boundaries, MCP over stdio (44 tests)
-uv run control/test_check.py      # the answer checker catches invented figures, wrong cells, points written as percent
+dotnet test                       # parser, integrity checks, queries, access boundaries, MCP over stdio (48 tests)
+uv run control/test_check.py      # the answer checker catches invented figures, wrong signs, wrong periods, amounts without "$", invented sheets, comment figures stated as facts, stale grades, missing transcripts
 uv run control/check.py           # re-checks the 12 recorded conversations against the workbooks
 ```
 
@@ -32,7 +32,7 @@ uv run control/check.py           # re-checks the 12 recorded conversations agai
 
 ## Recorded conversations
 
-`control/transcripts/` holds 12 conversations recorded with Claude Code as the MCP client (model `claude-sonnet-5-5`), every tool call and tool result included. `sh control/run.sh` records them again. `control/RESULTS.md` has the counts: 72 figures written in the answers, none untraced; 44 cell citations, none to a cell no tool returned, none with a different figure; behavior graded by a person in `control/grades.json`. Two questions (`supplier-prices`, `quarter-so-far`) were recorded several times and the published take was chosen; their grade says what the other takes said.
+`control/transcripts/` holds 12 conversations recorded with Claude Code as the MCP client (model `claude-sonnet-5-5`), every tool call and tool result included. `sh control/run.sh` records them again. `control/RESULTS.md` has the counts: 85 figures written in the answers, none without a tool value of the same number, sign, period and unit (2 are quotations of a report comment); 35 cell citations, none to a sheet or cell no tool returned, none with a different figure. A person graded each answer in `control/grades.json`, bound to the transcript's SHA-256. These are reviewed examples with selected takes, not a success rate: `q2-margin`, `supplier-prices` and `quarter-so-far` were recorded several times and one take was kept; each grade says what the others said.
 
 The server returns source-linked values and deterministic calculations. The published test results separately check Claude's answers for unsupported financial claims. That is a measurement on these 12 answers, not a guarantee about the next one.
 
@@ -41,6 +41,14 @@ The server returns source-linked values and deterministic calculations. The publ
 `sh packaging/build.sh` builds `dist/financial-statements-macos-arm64.mcpb` and `dist/financial-statements-windows-x64.mcpb` (self-contained, no .NET install needed). Open the file with Claude Desktop, then choose the approved exports folder in the extension settings, or leave it empty to use the sample.
 
 Built for Claude Desktop; tested with Claude Code as the MCP client. Checked: the macOS package's server over stdio. Not yet checked: installation inside Claude Desktop; the Windows package on a clean Windows machine. The binaries are not code-signed.
+
+## Parser and profile limits, for the first real export
+
+- Ambiguity is rejected, never resolved: a row, a column header or a reporting-unit sheet that appears twice blocks the export.
+- A blank amount counts as zero only when its whole row is blank on that sheet (a suppressed zero row); a row blank in some columns only blocks the export.
+- Supported calendar: monthly fiscal periods ending on calendar month-ends, with the fiscal year start declared in `approved.json`. A period ending elsewhere blocks the export; 4-4-5 calendars are not supported.
+- Versions: when two approved exports cover one period, the newest approval is authoritative. If it fails its checks the period is blocked, and the older approval is only offered with a warning.
+- The workbook layout (header rows, one sheet per reporting unit) is modeled, not taken from a real export: `ExportReader.cs` is where a real layout is mapped.
 
 ## Privacy
 

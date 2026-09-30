@@ -108,7 +108,7 @@ public class ReviewFixesTests
         var st = new Statements(store);
         Assert.Equal("IS_2026-08-corrected.xlsx", st.GetValues("2026-08", null, new[] { "Net sales" }, new[] { Q })["snapshot"]!.GetValue<string>());
         var list = st.ListSnapshots()["snapshots"]!.AsArray();
-        Assert.Contains(list, s => s!["file"]!.GetValue<string>() == "IS_2026-08.xlsx" && s["status"]!.GetValue<string>().StartsWith("replaced by IS_2026-08-corrected.xlsx"));
+        Assert.Contains(list, s => s!["file"]!.GetValue<string>() == "IS_2026-08.xlsx" && s["status"]!.GetValue<string>().StartsWith("superseded by IS_2026-08-corrected.xlsx"));
     }
 
     // ---------- calculate ----------
@@ -141,5 +141,65 @@ public class ReviewFixesTests
         Assert.Equal("rate_sum", Assert.Throws<QueryException>(() => St.Calculate("sum", new[] { C("2026-06", "Gross margin %"), C("2026-03", "Gross margin %") })).Code);
         Assert.Equal("snapshot_blocked", Assert.Throws<QueryException>(() => St.Calculate("sum", new[] { C("2026-08", "Net sales"), C("2026-06", "Net sales") })).Code);
         Assert.Equal("unknown_operation", Assert.Throws<QueryException>(() => St.Calculate("average", new[] { C("2026-06", "Net sales") })).Code);
+    }
+
+    // ---------- second review ----------
+
+    [Fact]
+    public void A_newer_approval_that_fails_blocks_the_period_and_the_older_one_is_only_offered()
+    {
+        var dir = Folder((d, m) =>
+        {
+            File.Copy(Path.Combine(d, "IS_2026-08.xlsx"), Path.Combine(d, "IS_2026-06-corrected.xlsx"));
+            using (var wb = new XLWorkbook(Path.Combine(d, "IS_2026-06-corrected.xlsx")))
+            { foreach (var ws in wb.Worksheets) ws.Cell("A3").Value = "For the Period Ending June 30, 2026"; wb.Save(); }
+            var c = m["snapshots"]![1]!.DeepClone();
+            c["file"] = "IS_2026-06-corrected.xlsx"; c["approved_on"] = "2026-07-20";
+            m["snapshots"]!.AsArray().Add(c);
+        });
+        var store = SnapshotStore.Load(dir);
+        Assert.Equal("IS_2026-06-corrected.xlsx", store.Snapshots.Single(s => s.Entry.File == "IS_2026-06.xlsx").ReplacedBy);
+        var e = Assert.Throws<QueryException>(() => new Statements(store).GetValues("2026-06", null, new[] { "Net sales" }, new[] { Q }));
+        Assert.Equal("snapshot_blocked", e.Code);
+        var offer = e.ToJson()["earlier_approval_of_this_period"]!;
+        Assert.Equal("IS_2026-06.xlsx", offer["file"]!.GetValue<string>());
+        Assert.Contains("Not served", offer["note"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void Calculate_refuses_mixed_amount_and_rate_and_returns_snapshot_context()
+    {
+        Assert.Equal("incompatible_inputs", Assert.Throws<QueryException>(() => St.Calculate("difference", new[] { C("2026-06", "Net sales"), C("2026-06", "Gross margin %") })).Code);
+        Assert.Equal("incompatible_inputs", Assert.Throws<QueryException>(() => St.Calculate("relative_change", new[] { C("2026-06", "Gross margin %"), C("2026-06", "Net sales") })).Code);
+        var r = St.Calculate("difference", new[] { C("2026-03", "Gross profit"), C("2026-06", "Gross profit") });
+        var snaps = r["snapshots"]!.AsArray();
+        Assert.Equal(2, snaps.Count);
+        foreach (var k in new[] { "company", "sha256", "period_end", "approved", "column_scope", "scenario", "currency", "scale" }) Assert.NotNull(snaps[0]![k]);
+    }
+
+    [Fact]
+    public void Every_bridge_figure_lists_every_cell_it_depends_on()
+    {
+        var b = St.MarginBridge("2026-03", "2026-06", Q, null);
+        var w = b["units"]!.AsArray().Single(u => u!["unit"]!.GetValue<string>() == "Wholesale")!;
+        var share = w["share_of_net_sales_to"]!;
+        Assert.Equal("[IS_2026-06.xlsx]Wholesale!C13", share["numerator"]!.GetValue<string>());
+        Assert.Equal(3, share["denominator"]!.AsArray().Count);
+        Assert.Equal(3, share["inputs"]!.AsArray().Count);
+        Assert.Equal(12, b["mix_effect_total"]!["inputs"]!.AsArray().Count);
+        Assert.Equal(12, b["rate_effect_total"]!["inputs"]!.AsArray().Count);
+        foreach (var u in b["units"]!.AsArray())
+            Assert.True(u!["mix_effect"]!["inputs"]!.AsArray().Count >= 9); // both periods' denominators and every unit's gross profit
+    }
+
+    [Fact]
+    public void Duplicate_rows_partial_blanks_and_non_month_end_periods_block()
+    {
+        var dup = Folder((d, _) => EditJune(d, ws => { if (ws.Name == "Online") ws.Cell("A10").Value = "Product sales"; }));
+        Assert.Contains(June(dup).Failures, f => f.Contains("appears twice"));
+        var partial = Folder((d, _) => EditJune(d, ws => { if (ws.Name == "Wholesale") ws.Cell("C17").Clear(); }));
+        Assert.Contains(June(partial).Failures, f => f.Contains("\"Inbound freight\" / Quarter to Date Actual is blank while other columns"));
+        var midMonth = Folder((d, m) => { EditJune(d, ws => ws.Cell("A3").Value = "For the Period Ending June 27, 2026"); m["snapshots"]![1]!["period_end"] = "2026-06-27"; });
+        Assert.Contains(SnapshotStore.Load(midMonth).Snapshots.Single(s => s.Entry.File == "IS_2026-06.xlsx").Failures, f => f.Contains("not on a calendar month-end"));
     }
 }

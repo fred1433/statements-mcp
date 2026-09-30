@@ -62,12 +62,13 @@ public sealed class SnapshotStore
         var sorted = store.Snapshots.OrderBy(x => x.PeriodEnd).ThenBy(x => x.Order).ToList();
         store.Snapshots.Clear();
         store.Snapshots.AddRange(sorted);
-        // Several approved exports for one period (a re-export after a correction): serve the most recently
-        // approved one that passes its checks; if none passes, the most recently approved one, blocked.
+        // Several approved exports for one period (a re-export after a correction).
         foreach (var group in store.Snapshots.GroupBy(x => x.Id).Where(g => g.Count() > 1))
         {
+            // The newest approval is authoritative. If it fails, the period is blocked: an older approval is never served
+            // in its place, because the correction may have changed its figures.
             var byApproval = group.OrderByDescending(x => x.Entry.ApprovedOn, StringComparer.Ordinal).ThenByDescending(x => x.Order).ToList();
-            var served = byApproval.FirstOrDefault(x => x.Usable) ?? byApproval[0];
+            var served = byApproval[0];
             foreach (var other in group) if (other != served) other.ReplacedBy = served.Entry.File;
         }
         return store;
@@ -105,6 +106,7 @@ public sealed class SnapshotStore
         {
             if (!s.Company.Equals(Manifest.Company, StringComparison.OrdinalIgnoreCase)) f.Add($"{entry.File}, sheet \"{s.Name}\": company is \"{s.Company}\", expected \"{Manifest.Company}\"");
             if (!s.Report.Equals(Manifest.Report, StringComparison.OrdinalIgnoreCase)) f.Add($"{entry.File}, sheet \"{s.Name}\": report is \"{s.Report}\", expected \"{Manifest.Report}\"");
+            if (s.PeriodEnd.AddDays(1).Day != 1) f.Add($"{entry.File}, sheet \"{s.Name}\": the period ends {s.PeriodEnd:yyyy-MM-dd}, not on a calendar month-end; this export profile supports monthly fiscal periods ending on calendar month-ends only");
             if (s.PeriodEnd != periodEnd) f.Add($"{entry.File}, sheet \"{s.Name}\": period ends {s.PeriodEnd:yyyy-MM-dd}, approved as {entry.PeriodEnd}");
             var amounts = ExportReader.ParseAmounts(s.AmountsLine);
             if (amounts is null)
@@ -118,6 +120,7 @@ public sealed class SnapshotStore
                 snap.Scale = amounts.Value.Scale; snap.Currency = amounts.Value.Currency;
             }
             if (!AllUnits.Contains(s.Unit, StringComparer.OrdinalIgnoreCase)) f.Add($"{entry.File}, sheet \"{s.Name}\": reporting unit \"{s.Unit}\" is not in the reporting tree");
+            else if (snap.SheetsByUnit.ContainsKey(s.Unit)) f.Add($"{entry.File}: two sheets are headed with reporting unit \"{s.Unit}\"; ambiguous, nothing is chosen");
             else snap.SheetsByUnit[s.Unit] = s;
             foreach (var cell in s.Cells.Values.Where(c => c.Problem is not null)) f.Add($"{entry.File}, sheet \"{s.Name}\": {cell.Problem}");
             foreach (var row in s.Rows)
@@ -128,7 +131,7 @@ public sealed class SnapshotStore
             foreach (var c in s.Columns) if (!Columns.Contains(c)) Columns.Add(c);
         }
         foreach (var unit in AllUnits)
-            if (!snap.SheetsByUnit.ContainsKey(unit)) f.Add($"{entry.File}: reporting unit \"{unit}\" is missing from the export");
+            if (!snap.SheetsByUnit.ContainsKey(unit)) f.Add($"{entry.File}: the worksheet for reporting unit \"{unit}\" is missing, so the company totals cannot be reconciled with their units and the export cannot be validated");
         if (f.Count > 0) return snap;
 
         CheckTies(snap);
@@ -152,6 +155,11 @@ public sealed class SnapshotStore
                 {
                     var printed = V(s, rule.Total, col);
                     if (printed is null) { snap.Failures.Add($"{snap.Entry.File}, sheet \"{s.Name}\": \"{rule.Total}\" / {col} is blank"); continue; }
+                    // A blank line counts as zero only when the whole row is blank on this sheet (a suppressed zero row);
+                    // a row blank in some columns only is missing data.
+                    foreach (var r in rule.Plus.Concat(rule.Minus))
+                        if (V(s, r, col) is null && s.Columns.Any(c => V(s, r, c) is not null))
+                            snap.Failures.Add($"{snap.Entry.File}, sheet \"{s.Name}\": \"{r}\" / {col} is blank while other columns of that row are printed");
                     double sum = rule.Plus.Sum(r => V(s, r, col) ?? 0) - rule.Minus.Sum(r => V(s, r, col) ?? 0);
                     double diff = printed.Value - sum;
                     int n = rule.Plus.Count + rule.Minus.Count;

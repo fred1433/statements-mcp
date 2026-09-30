@@ -42,11 +42,17 @@ public sealed class Statements(SnapshotStore store)
         if (!snap.Usable)
         {
             var older = usable.LastOrDefault(s => s.PeriodEnd < snap.PeriodEnd);
+            var earlierApproval = store.Snapshots.LastOrDefault(s => s.Id == snap.Id && !s.Served && s.Usable);
             throw new QueryException("snapshot_blocked",
                 $"The {snap.Id} export ({snap.Entry.File}) failed its integrity checks, so no figure is read from it.",
                 new JsonObject
                 {
                     ["failed_checks"] = Arr(snap.Failures),
+                    ["earlier_approval_of_this_period"] = earlierApproval is null ? null : new JsonObject
+                    {
+                        ["file"] = earlierApproval.Entry.File, ["approved"] = $"{earlierApproval.Entry.ApprovedBy}, {earlierApproval.Entry.ApprovedOn}",
+                        ["note"] = $"Superseded by the newer approval {snap.Entry.File}, which failed its checks. Not served: the correction may change its figures. Use it only if the person asks for it knowing this, or the controller confirms it is still authoritative.",
+                    },
                     ["latest_usable_snapshot"] = older is null ? null : new JsonObject
                     {
                         ["period"] = older.Id, ["file"] = older.Entry.File, ["period_end"] = older.Entry.PeriodEnd,
@@ -173,7 +179,8 @@ public sealed class Statements(SnapshotStore store)
             ["approved"] = $"{s.Entry.ApprovedBy}, {s.Entry.ApprovedOn}",
             ["sha256"] = SnapshotStore.Short(s.ActualSha256),
             ["imported_at"] = s.ImportedAt.ToString("yyyy-MM-dd HH:mm zzz", Us),
-            ["status"] = s.ReplacedBy is not null ? $"replaced by {s.ReplacedBy} (a later approval for the same period); not served" : s.Usable ? "usable" : "blocked",
+            ["columns_cover"] = s.PeriodEnd == default ? null : ColumnScopes(s.PeriodEnd),
+            ["status"] = s.ReplacedBy is not null ? $"superseded by {s.ReplacedBy}, approved later for the same period; not served" + (s.Usable ? "" : ", and failed its own checks") : s.Usable ? "usable" : "blocked",
             ["failed_checks"] = s.Usable ? null : Arr(s.Failures),
             ["rounding_differences"] = s.RoundingNotes.Count,
         }).ToArray()),
@@ -183,7 +190,7 @@ public sealed class Statements(SnapshotStore store)
         ["notes"] = Arr(new[]
         {
             "Each snapshot is one approved month-end export; the column_scope of each result says what its columns cover.",
-            "When two approved exports cover the same period, the most recently approved one that passes its checks is served.",
+            "When two approved exports cover the same period, the most recently approved one is authoritative; if it fails its checks the period is blocked.",
             "Periods are written YYYY-MM.",
         }),
     };
@@ -271,6 +278,10 @@ public sealed class Statements(SnapshotStore store)
 
         double rateTotal = 0, mixTotal = 0;
         var unitRows = new JsonArray();
+        // Every cell each figure depends on, so a reader can recompute it without reading the rest of the response.
+        string[] denA = units.Select(x => x.ga.denRef).ToArray(), denB = units.Select(x => x.gb.denRef).ToArray();
+        string[] numA = units.Select(x => x.ga.numRef).ToArray();
+        string[] all = units.SelectMany(x => new[] { x.ga.numRef, x.ga.denRef, x.gb.numRef, x.gb.denRef }).ToArray();
         foreach (var (u, ga, gb) in units)
         {
             double ma = ga.num / ga.den, mb = gb.num / gb.den;
@@ -283,10 +294,10 @@ public sealed class Statements(SnapshotStore store)
                 ["rate_from"] = Derived(Format.Percent(ma), ma, $"{rule.Numerator} / {rule.Denominator}", ga.numRef, ga.denRef),
                 ["rate_to"] = Derived(Format.Percent(mb), mb, $"{rule.Numerator} / {rule.Denominator}", gb.numRef, gb.denRef),
                 ["rate_change"] = Derived(Format.Points(mb - ma), mb - ma, "rate_to - rate_from", ga.numRef, ga.denRef, gb.numRef, gb.denRef),
-                ["share_of_" + Snake(rule.Denominator) + "_from"] = Derived(Format.Percent(wa, 1), wa, $"unit {rule.Denominator} / sum of units' {rule.Denominator}", ga.denRef),
-                ["share_of_" + Snake(rule.Denominator) + "_to"] = Derived(Format.Percent(wb, 1), wb, $"unit {rule.Denominator} / sum of units' {rule.Denominator}", gb.denRef),
-                ["rate_effect"] = Derived(Format.Points(rate), rate, "share_to * (rate_to - rate_from)", ga.numRef, ga.denRef, gb.numRef, gb.denRef),
-                ["mix_effect"] = Derived(Format.Points(mix), mix, "(share_to - share_from) * (rate_from - units' combined rate_from)", ga.numRef, ga.denRef, gb.denRef),
+                ["share_of_" + Snake(rule.Denominator) + "_from"] = Named(Derived(Format.Percent(wa, 1), wa, $"unit {rule.Denominator} / sum of the units' {rule.Denominator}", denA.Prepend(ga.denRef).Distinct().ToArray()), ga.denRef, denA),
+                ["share_of_" + Snake(rule.Denominator) + "_to"] = Named(Derived(Format.Percent(wb, 1), wb, $"unit {rule.Denominator} / sum of the units' {rule.Denominator}", denB.Prepend(gb.denRef).Distinct().ToArray()), gb.denRef, denB),
+                ["rate_effect"] = Derived(Format.Points(rate), rate, "share_to * (rate_to - rate_from)", denB.Concat(new[] { ga.numRef, ga.denRef, gb.numRef }).Distinct().ToArray()),
+                ["mix_effect"] = Derived(Format.Points(mix), mix, "(share_to - share_from) * (rate_from - units' combined rate_from)", denA.Concat(denB).Concat(numA).Distinct().ToArray()),
             });
         }
         double change = Mb - Ma;
@@ -302,8 +313,8 @@ public sealed class Statements(SnapshotStore store)
             ["company_rate_change"] = Derived(Format.Points(change), change, "company rate_to - company rate_from", ta.numRef, ta.denRef, tb.numRef, tb.denRef),
             ["printed_rates"] = new JsonArray(ToJson(Read(a, root, rule.Row, col)), ToJson(Read(b, root, rule.Row, col))),
             ["units"] = unitRows,
-            ["rate_effect_total"] = Derived(Format.Points(rateTotal), rateTotal, "sum of units' rate_effect"),
-            ["mix_effect_total"] = Derived(Format.Points(mixTotal), mixTotal, "sum of units' mix_effect"),
+            ["rate_effect_total"] = Derived(Format.Points(rateTotal), rateTotal, "sum of the units' rate_effect, each unit's rate change weighted by its share of net sales in the later period", all),
+            ["mix_effect_total"] = Derived(Format.Points(mixTotal), mixTotal, "sum of the units' mix_effect", all),
             ["check"] = new JsonObject
             {
                 ["rate_plus_mix_equals_units_change"] = Math.Abs(rateTotal + mixTotal - (MbU - MaU)) < 1e-12,
@@ -347,6 +358,7 @@ public sealed class Statements(SnapshotStore store)
         var refs = Arr(inputs.Select(x => x.p.Ref));
         var values = new JsonArray(inputs.Select(x => (JsonNode)ToJson(x.p)).ToArray());
         bool anyRate = inputs.Any(x => x.p.IsPercent);
+        bool mixedTypes = anyRate && inputs.Any(x => !x.p.IsPercent);
         string scale = inputs.Select(x => x.p.Scale).FirstOrDefault() ?? "units";
         if (inputs.Select(x => x.p.Scale).Distinct().Count() > 1) throw new QueryException("mixed_scale", "The inputs are stated in different scales.");
 
@@ -354,6 +366,7 @@ public sealed class Statements(SnapshotStore store)
         {
             ["operation"] = op, ["display"] = display, ["value"] = Math.Round(value, 10), ["formula"] = formula,
             ["inputs"] = refs, ["input_values"] = values, ["note"] = note,
+            ["snapshots"] = new JsonArray(inputs.Select(x => x.snap).Distinct().Select(sn => (JsonNode)Context(sn)).ToArray()),
         };
         void Count(int n) { if (inputs.Count != n) throw new QueryException("wrong_inputs", $"{op} takes exactly {n} cells, got {inputs.Count}."); }
 
@@ -383,12 +396,14 @@ public sealed class Statements(SnapshotStore store)
             case "difference":
             {
                 Count(2);
+                if (mixedTypes) throw new QueryException("incompatible_inputs", "One input is a rate and the other an amount; they cannot be subtracted.");
                 double v = inputs[1].p.Value!.Value - inputs[0].p.Value!.Value;
                 return anyRate ? Result(Format.Points(v), v, "to - from, in percentage points") : Result(Format.Change(v) + ScaleWord(scale), v, "to - from");
             }
             case "relative_change":
             {
                 Count(2);
+                if (mixedTypes) throw new QueryException("incompatible_inputs", "One input is a rate and the other an amount; a relative change needs two of the same kind.");
                 double from = inputs[0].p.Value!.Value, to = inputs[1].p.Value!.Value;
                 if (from == 0) throw new QueryException("zero_denominator", "The starting value is zero; a relative change is not defined.");
                 double v = (to - from) / Math.Abs(from);
@@ -401,6 +416,13 @@ public sealed class Statements(SnapshotStore store)
     }
 
     // ---------- helpers ----------
+
+    static JsonObject Named(JsonObject d, string numerator, string[] denominator)
+    {
+        d["numerator"] = numerator;
+        d["denominator"] = Arr(denominator);
+        return d;
+    }
 
     static JsonObject Derived(string display, double value, string formula, params string[] inputs) => new()
     {

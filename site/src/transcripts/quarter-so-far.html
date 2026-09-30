@@ -117,7 +117,12 @@
       &quot;period_end&quot;: &quot;2026-03-31&quot;,
       &quot;approved&quot;: &quot;Controller, 2026-04-09&quot;,
       &quot;sha256&quot;: &quot;b3b152ac30b0&quot;,
-      &quot;imported_at&quot;: &quot;2026-09-30 13:01 -03:00&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 15:30 -03:00&quot;,
+      &quot;columns_cover&quot;: {
+        &quot;Current Period Actual&quot;: &quot;March 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026 (the full fiscal quarter 1); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
       &quot;status&quot;: &quot;usable&quot;,
       &quot;failed_checks&quot;: null,
       &quot;rounding_differences&quot;: 32
@@ -128,7 +133,12 @@
       &quot;period_end&quot;: &quot;2026-06-30&quot;,
       &quot;approved&quot;: &quot;Controller, 2026-07-08&quot;,
       &quot;sha256&quot;: &quot;e42f0faa32be&quot;,
-      &quot;imported_at&quot;: &quot;2026-09-30 13:01 -03:00&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 15:30 -03:00&quot;,
+      &quot;columns_cover&quot;: {
+        &quot;Current Period Actual&quot;: &quot;June 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;April 1, 2026 to June 30, 2026 (the full fiscal quarter 2); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
       &quot;status&quot;: &quot;usable&quot;,
       &quot;failed_checks&quot;: null,
       &quot;rounding_differences&quot;: 36
@@ -139,10 +149,15 @@
       &quot;period_end&quot;: &quot;2026-08-31&quot;,
       &quot;approved&quot;: &quot;Controller, 2026-09-09&quot;,
       &quot;sha256&quot;: &quot;ab7aee56c590&quot;,
-      &quot;imported_at&quot;: &quot;2026-09-30 13:01 -03:00&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 15:30 -03:00&quot;,
+      &quot;columns_cover&quot;: {
+        &quot;Current Period Actual&quot;: &quot;August 1, 2026 to August 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;July 1, 2026 to August 31, 2026 (fiscal quarter 3, not finished); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to August 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
       &quot;status&quot;: &quot;blocked&quot;,
       &quot;failed_checks&quot;: [
-        &quot;IS_2026-08.xlsx: reporting unit \&quot;Service\&quot; is missing from the export&quot;
+        &quot;IS_2026-08.xlsx: the worksheet for reporting unit \&quot;Service\&quot; is missing, so the company totals cannot be reconciled with their units and the export cannot be validated&quot;
       ],
       &quot;rounding_differences&quot;: 0
     }
@@ -152,14 +167,12 @@
   &quot;fiscal_year_start&quot;: &quot;January 1 (declared in approved.json)&quot;,
   &quot;notes&quot;: [
     &quot;Each snapshot is one approved month-end export; the column_scope of each result says what its columns cover.&quot;,
-    &quot;When two approved exports cover the same period, the most recently approved one that passes its checks is served.&quot;,
+    &quot;When two approved exports cover the same period, the most recently approved one is authoritative; if it fails its checks the period is blocked.&quot;,
     &quot;Periods are written YYYY-MM.&quot;
   ]
-}</pre></details></section><section class='final'><h2>Claude's answer</h2><pre class='answer'>I can&#x27;t give you a quarter-to-date gross margin for this quarter (Q3, July–September) because the exports don&#x27;t hold a usable snapshot for it.
+}</pre></details></section><section class='final'><h2>Claude's answer</h2><pre class='answer'>I can&#x27;t give you a quarter-to-date gross margin for this quarter. The exports don&#x27;t hold a usable figure for it.
 
-- **2026-08 is the latest snapshot covering Q3, and it&#x27;s blocked.** It failed this check: `IS_2026-08.xlsx: reporting unit &quot;Service&quot; is missing from the export`. Without the Service unit, any margin from it would leave out part of the company.
-- **There is no 2026-09 snapshot.** September month-end hasn&#x27;t been exported and approved yet.
+- **Current quarter:** Today is September 30, 2026, so we&#x27;re in fiscal Q3 (July 1 to September 30). There is no September export yet.
+- **Latest export:** The August export (July 1 to August 31, Q3 not finished) is blocked. It failed this check: the worksheet for the Service reporting unit is missing, so the company totals can&#x27;t be reconciled with their units and the export can&#x27;t be validated. I haven&#x27;t used its numbers.
 
-The usable snapshots are 2026-03 and 2026-06. Both are for earlier quarters, so I haven&#x27;t used them in place of Q3. I can pull the Q1 or Q2 gross margin if you&#x27;d like, but that wouldn&#x27;t answer your question.
-
-To get the Q3 figure, the August export needs to be corrected and re-approved with the Service unit, or the September export needs to be approved.</pre></section></main></body></html>
+The approved, usable exports cover only completed quarters. Q1 is in the March export and Q2 is in the June export. I can pull the gross margin for either one if that helps. The August export would need to be re-issued with the Service worksheet, or the September export approved, before there&#x27;s a reliable Q3 figure.</pre></section></main></body></html>

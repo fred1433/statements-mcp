@@ -79,7 +79,7 @@
   data.scenes.forEach((s, n) => {
     const b = document.createElement("button");
     b.className = "q"; b.type = "button"; b.setAttribute("role", "tab");
-    b.innerHTML = `“${esc(s.question)}”<small>${esc(s.label)}</small>`;
+    b.textContent = s.label;
     b.addEventListener("click", () => showScene(n));
     qBox.appendChild(b);
   });
@@ -88,9 +88,15 @@
     state.scene = n;
     const s = data.scenes[n];
     qBox.querySelectorAll(".q").forEach((b, k) => b.setAttribute("aria-selected", String(k === n)));
-    $(".answer-meta").textContent = `Claude's recorded answer, after ${s.tools.length} tool calls: ${[...new Set(s.tools)].join(", ")}.`;
+    $(".asked").textContent = `“${s.question}”`;
+    const ed = $(".editor");
+    ed.hidden = !s.editor_note;
+    ed.textContent = s.editor_note ? `Editor's note, not part of the recording: ${s.editor_note}` : "";
+    $(".how summary").textContent = `How Claude got this: ${s.tools.length} tool calls`;
+    $(".answer-meta").textContent = s.tools.join(", ") + ".";
+    $(".asked").after($(".excerpt"));
     $(".answer-body").innerHTML = markdown(s.answer);
-    $(".answer-foot").innerHTML = `Recorded September 30, 2026. Unedited, except that cell references are shown as tick marks and computed figures link to their formula and input cells. <a href="${s.transcript}">Full transcript with every tool result</a>.`;
+    $(".answer-foot").innerHTML = `Recorded September 30, 2026. Claude's answer, unedited, except that cell references are shown as tick marks and computed figures link to their formula and input cells. Changes use underlying cell precision. <a href="${s.transcript}">Full transcript with every tool result</a>.`;
     $(".answer-body").querySelectorAll(".tick, .fig").forEach((t) => t.addEventListener("click", () => pick(t)));
     const ticks = [...$(".answer-body").querySelectorAll(".tick")];
     // Open on the rate the question is about when the answer cites it, else on the first citation.
@@ -112,7 +118,12 @@
     const last = refs[refs.length - 1].match(/^\[(.+?)\](.+)!([A-Z]+\d+)$/);
     state.book = last[1]; state.sheet = last[2]; state.swipe = !quiet;
     render();
-    if (!quiet && window.matchMedia("(max-width: 1080px)").matches) $(".desk").scrollIntoView({ behavior: "smooth", block: "start" });
+    // Small screens: the evidence goes right under the block holding the figure.
+    const ex = $(".excerpt");
+    if (window.matchMedia("(max-width: 1080px)").matches) {
+      const block = tick.closest("li, p, table") || $(".answer-body");
+      if (!quiet) block.after(ex); else $(".asked").after(ex);
+    }
   }
 
   // ---------- the packet ----------
@@ -183,7 +194,7 @@
 
   // ---------- checked ----------
   const s = data.summary;
-  $(".summary").innerHTML = `${s.conversations} recorded conversations. <span class="n">${s.figures}</span> figures written by Claude, <span class="n">${s.untraced}</span> that no tool returned. <span class="n">${s.citations}</span> cell citations, <span class="n">${s.bad_citations}</span> wrong. <span class="n">${s.as_expected}</span> of ${s.conversations} behaved as expected, read by a person; two were chosen among several recordings, and their note says what the others said.`;
+  $(".summary").innerHTML = `${s.conversations} reviewed conversations, some with selected takes. <span class="n">${s.figures}</span> figures written by Claude, <span class="n">${s.untraced}</span> without a matching tool value. <span class="n">${s.citations}</span> cell citations, <span class="n">${s.bad_citations}</span> wrong. <span class="n">${s.as_expected}</span> of ${s.conversations} read by a person as expected.`;
   const tb = $(".ledger tbody");
   const expectWord = { answer: "Answer", refuse: "Refuse", stop: "Stop", boundary: "Say the limit" };
   for (const r of data.ledger) {

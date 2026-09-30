@@ -20,7 +20,11 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "samples" / "approved-exports"
 OUT = ROOT / "site" / "src" / "data.json"
 REPO = "https://github.com/fred1433/statements-mcp/blob/main/"
-SCENES = [("q2-margin", "A useful answer"), ("quarter-so-far", "A stop"), ("supplier-prices", "A limit")]
+# Written by us, shown apart from the recorded answer, never inside it.
+EDITOR_NOTES = {
+    "quarter-so-far": "A corrected August export would cover July 1 to August 31 only. The full third quarter needs an approved September export.",
+}
+SCENES = [("q2-margin", "Margin fell, profit rose"), ("quarter-so-far", "Blocked export"), ("supplier-prices", "Supplier prices?")]
 
 
 def sheets(file):
@@ -170,10 +174,8 @@ def figure_index(calls):
 
     def walk(o, scope=None):
         if isinstance(o, dict):
-            if "units" in o and "mix_effect_total" in o:
-                scope = all_refs(o)  # bridge totals: their inputs are every unit's inputs
             if "formula" in o and isinstance(o.get("inputs"), list):
-                add(o.get("display"), o["formula"].split(";")[0], o["inputs"] or scope or [])
+                add(o.get("display"), o["formula"].split(";")[0], o["inputs"])
                 if isinstance(o.get("relative"), str):
                     add(o["relative"], "(to - from) / |from|", o["inputs"])
                 m = re.search(r"([-+]?\d+\.\d+ pts)", o.get("note") or "")
@@ -260,13 +262,14 @@ def main():
             "id": qid, "label": label, "question": q["question"], "answer": linked, "unlinked": unlinked,
             "tools": [c["tool"] for c in calls], "blocked": blocked,
             "transcript": f"transcripts/{qid}.html",
+            "editor_note": EDITOR_NOTES.get(qid),
         })
     rs = results["results"]
     summary = {
         "conversations": len(rs),
         "figures": sum(r["figures_in_answer"] for r in rs),
         "quoted": sum(len(r["figures_quoted_from_report_comments"]) for r in rs),
-        "untraced": sum(len(r["untraced_figures"]) for r in rs),
+        "untraced": sum(len(r["unsupported_figures"]) for r in rs),
         "citations": sum(r["citations"] for r in rs),
         "bad_citations": sum(len(r["citations_to_cells_no_tool_returned"]) + len(r["figures_different_from_cited_cell"]) for r in rs),
         "cells_reread": sum(r["tool_results_checked"]["cells_reread"] for r in rs),
@@ -276,7 +279,7 @@ def main():
     }
     ledger = [{"id": r["id"], "question": r["question"], "expect": r["expect"], "class": r["class"],
                "behavior": (r["behavior"] or {}).get("behavior"), "why": (r["behavior"] or {}).get("why"),
-               "figures": r["figures_in_answer"], "untraced": len(r["untraced_figures"]),
+               "figures": r["figures_in_answer"], "untraced": len(r["unsupported_figures"]),
                "transcript": f"transcripts/{r['id']}.html"} for r in rs]
     tdir = OUT.parent / "transcripts"
     tdir.mkdir(exist_ok=True)

@@ -117,7 +117,12 @@
       &quot;period_end&quot;: &quot;2026-03-31&quot;,
       &quot;approved&quot;: &quot;Controller, 2026-04-09&quot;,
       &quot;sha256&quot;: &quot;b3b152ac30b0&quot;,
-      &quot;imported_at&quot;: &quot;2026-09-30 12:59 -03:00&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 15:27 -03:00&quot;,
+      &quot;columns_cover&quot;: {
+        &quot;Current Period Actual&quot;: &quot;March 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026 (the full fiscal quarter 1); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
       &quot;status&quot;: &quot;usable&quot;,
       &quot;failed_checks&quot;: null,
       &quot;rounding_differences&quot;: 32
@@ -128,7 +133,12 @@
       &quot;period_end&quot;: &quot;2026-06-30&quot;,
       &quot;approved&quot;: &quot;Controller, 2026-07-08&quot;,
       &quot;sha256&quot;: &quot;e42f0faa32be&quot;,
-      &quot;imported_at&quot;: &quot;2026-09-30 12:59 -03:00&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 15:27 -03:00&quot;,
+      &quot;columns_cover&quot;: {
+        &quot;Current Period Actual&quot;: &quot;June 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;April 1, 2026 to June 30, 2026 (the full fiscal quarter 2); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
       &quot;status&quot;: &quot;usable&quot;,
       &quot;failed_checks&quot;: null,
       &quot;rounding_differences&quot;: 36
@@ -139,10 +149,15 @@
       &quot;period_end&quot;: &quot;2026-08-31&quot;,
       &quot;approved&quot;: &quot;Controller, 2026-09-09&quot;,
       &quot;sha256&quot;: &quot;ab7aee56c590&quot;,
-      &quot;imported_at&quot;: &quot;2026-09-30 12:59 -03:00&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 15:27 -03:00&quot;,
+      &quot;columns_cover&quot;: {
+        &quot;Current Period Actual&quot;: &quot;August 1, 2026 to August 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;July 1, 2026 to August 31, 2026 (fiscal quarter 3, not finished); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to August 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
       &quot;status&quot;: &quot;blocked&quot;,
       &quot;failed_checks&quot;: [
-        &quot;IS_2026-08.xlsx: reporting unit \&quot;Service\&quot; is missing from the export&quot;
+        &quot;IS_2026-08.xlsx: the worksheet for reporting unit \&quot;Service\&quot; is missing, so the company totals cannot be reconciled with their units and the export cannot be validated&quot;
       ],
       &quot;rounding_differences&quot;: 0
     }
@@ -152,68 +167,10 @@
   &quot;fiscal_year_start&quot;: &quot;January 1 (declared in approved.json)&quot;,
   &quot;notes&quot;: [
     &quot;Each snapshot is one approved month-end export; the column_scope of each result says what its columns cover.&quot;,
-    &quot;When two approved exports cover the same period, the most recently approved one that passes its checks is served.&quot;,
+    &quot;When two approved exports cover the same period, the most recently approved one is authoritative; if it fails its checks the period is blocked.&quot;,
     &quot;Periods are written YYYY-MM.&quot;
   ]
-}</pre></details></section><section class='call'><h2>2. get_values</h2><p class='args'>{&quot;period&quot;: &quot;2026-03&quot;, &quot;rows&quot;: [&quot;Gross margin %&quot;], &quot;columns&quot;: [&quot;Quarter to Date Actual&quot;]}</p><details><summary>Tool result</summary><pre>{
-  &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
-  &quot;report&quot;: &quot;Income Statement&quot;,
-  &quot;snapshot&quot;: &quot;IS_2026-03.xlsx&quot;,
-  &quot;sha256&quot;: &quot;b3b152ac30b0&quot;,
-  &quot;period_end&quot;: &quot;2026-03-31&quot;,
-  &quot;scenario&quot;: &quot;Actual&quot;,
-  &quot;currency&quot;: &quot;USD&quot;,
-  &quot;scale&quot;: &quot;units&quot;,
-  &quot;amounts_as_printed&quot;: &quot;Amounts in US Dollars&quot;,
-  &quot;approved&quot;: &quot;Controller, 2026-04-09&quot;,
-  &quot;column_scope&quot;: {
-    &quot;Current Period Actual&quot;: &quot;March 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
-    &quot;Quarter to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026 (the full fiscal quarter 1); fiscal year starting January 1, as declared in approved.json&quot;,
-    &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;
-  },
-  &quot;data&quot;: &quot;synthetic demonstration data, not a real company&quot;,
-  &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
-  &quot;values&quot;: [
-    {
-      &quot;row&quot;: &quot;Gross margin %&quot;,
-      &quot;column&quot;: &quot;Quarter to Date Actual&quot;,
-      &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
-      &quot;value&quot;: 0.280994,
-      &quot;scale&quot;: &quot;ratio&quot;,
-      &quot;display&quot;: &quot;28.1%&quot;,
-      &quot;ref&quot;: &quot;[IS_2026-03.xlsx]Total!C21&quot;
-    }
-  ]
-}</pre></details></section><section class='call'><h2>3. get_values</h2><p class='args'>{&quot;period&quot;: &quot;2026-06&quot;, &quot;rows&quot;: [&quot;Gross margin %&quot;], &quot;columns&quot;: [&quot;Quarter to Date Actual&quot;]}</p><details><summary>Tool result</summary><pre>{
-  &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
-  &quot;report&quot;: &quot;Income Statement&quot;,
-  &quot;snapshot&quot;: &quot;IS_2026-06.xlsx&quot;,
-  &quot;sha256&quot;: &quot;e42f0faa32be&quot;,
-  &quot;period_end&quot;: &quot;2026-06-30&quot;,
-  &quot;scenario&quot;: &quot;Actual&quot;,
-  &quot;currency&quot;: &quot;USD&quot;,
-  &quot;scale&quot;: &quot;units&quot;,
-  &quot;amounts_as_printed&quot;: &quot;Amounts in US Dollars&quot;,
-  &quot;approved&quot;: &quot;Controller, 2026-07-08&quot;,
-  &quot;column_scope&quot;: {
-    &quot;Current Period Actual&quot;: &quot;June 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
-    &quot;Quarter to Date Actual&quot;: &quot;April 1, 2026 to June 30, 2026 (the full fiscal quarter 2); fiscal year starting January 1, as declared in approved.json&quot;,
-    &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;
-  },
-  &quot;data&quot;: &quot;synthetic demonstration data, not a real company&quot;,
-  &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
-  &quot;values&quot;: [
-    {
-      &quot;row&quot;: &quot;Gross margin %&quot;,
-      &quot;column&quot;: &quot;Quarter to Date Actual&quot;,
-      &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
-      &quot;value&quot;: 0.276406,
-      &quot;scale&quot;: &quot;ratio&quot;,
-      &quot;display&quot;: &quot;27.6%&quot;,
-      &quot;ref&quot;: &quot;[IS_2026-06.xlsx]Total!C21&quot;
-    }
-  ]
-}</pre></details></section><section class='call'><h2>4. compare_periods</h2><p class='args'>{&quot;period_from&quot;: &quot;2026-03&quot;, &quot;period_to&quot;: &quot;2026-06&quot;, &quot;column&quot;: &quot;Quarter to Date Actual&quot;, &quot;rows&quot;: [&quot;Gross margin %&quot;]}</p><details><summary>Tool result</summary><pre>{
+}</pre></details></section><section class='call'><h2>2. compare_periods</h2><p class='args'>{&quot;period_from&quot;: &quot;2026-03&quot;, &quot;period_to&quot;: &quot;2026-06&quot;, &quot;column&quot;: &quot;Quarter to Date Actual&quot;, &quot;rows&quot;: [&quot;Gross margin %&quot;]}</p><details><summary>Tool result</summary><pre>{
   &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
   &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
   &quot;column&quot;: &quot;Quarter to Date Actual&quot;,
@@ -287,6 +244,64 @@
       }
     }
   ]
+}</pre></details></section><section class='call'><h2>3. get_values</h2><p class='args'>{&quot;period&quot;: &quot;2026-03&quot;, &quot;rows&quot;: [&quot;Gross margin %&quot;], &quot;columns&quot;: [&quot;Quarter to Date Actual&quot;]}</p><details><summary>Tool result</summary><pre>{
+  &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+  &quot;report&quot;: &quot;Income Statement&quot;,
+  &quot;snapshot&quot;: &quot;IS_2026-03.xlsx&quot;,
+  &quot;sha256&quot;: &quot;b3b152ac30b0&quot;,
+  &quot;period_end&quot;: &quot;2026-03-31&quot;,
+  &quot;scenario&quot;: &quot;Actual&quot;,
+  &quot;currency&quot;: &quot;USD&quot;,
+  &quot;scale&quot;: &quot;units&quot;,
+  &quot;amounts_as_printed&quot;: &quot;Amounts in US Dollars&quot;,
+  &quot;approved&quot;: &quot;Controller, 2026-04-09&quot;,
+  &quot;column_scope&quot;: {
+    &quot;Current Period Actual&quot;: &quot;March 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+    &quot;Quarter to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026 (the full fiscal quarter 1); fiscal year starting January 1, as declared in approved.json&quot;,
+    &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+  },
+  &quot;data&quot;: &quot;synthetic demonstration data, not a real company&quot;,
+  &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+  &quot;values&quot;: [
+    {
+      &quot;row&quot;: &quot;Gross margin %&quot;,
+      &quot;column&quot;: &quot;Quarter to Date Actual&quot;,
+      &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+      &quot;value&quot;: 0.280994,
+      &quot;scale&quot;: &quot;ratio&quot;,
+      &quot;display&quot;: &quot;28.1%&quot;,
+      &quot;ref&quot;: &quot;[IS_2026-03.xlsx]Total!C21&quot;
+    }
+  ]
+}</pre></details></section><section class='call'><h2>4. get_values</h2><p class='args'>{&quot;period&quot;: &quot;2026-06&quot;, &quot;rows&quot;: [&quot;Gross margin %&quot;], &quot;columns&quot;: [&quot;Quarter to Date Actual&quot;]}</p><details><summary>Tool result</summary><pre>{
+  &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+  &quot;report&quot;: &quot;Income Statement&quot;,
+  &quot;snapshot&quot;: &quot;IS_2026-06.xlsx&quot;,
+  &quot;sha256&quot;: &quot;e42f0faa32be&quot;,
+  &quot;period_end&quot;: &quot;2026-06-30&quot;,
+  &quot;scenario&quot;: &quot;Actual&quot;,
+  &quot;currency&quot;: &quot;USD&quot;,
+  &quot;scale&quot;: &quot;units&quot;,
+  &quot;amounts_as_printed&quot;: &quot;Amounts in US Dollars&quot;,
+  &quot;approved&quot;: &quot;Controller, 2026-07-08&quot;,
+  &quot;column_scope&quot;: {
+    &quot;Current Period Actual&quot;: &quot;June 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+    &quot;Quarter to Date Actual&quot;: &quot;April 1, 2026 to June 30, 2026 (the full fiscal quarter 2); fiscal year starting January 1, as declared in approved.json&quot;,
+    &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+  },
+  &quot;data&quot;: &quot;synthetic demonstration data, not a real company&quot;,
+  &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+  &quot;values&quot;: [
+    {
+      &quot;row&quot;: &quot;Gross margin %&quot;,
+      &quot;column&quot;: &quot;Quarter to Date Actual&quot;,
+      &quot;unit&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+      &quot;value&quot;: 0.276406,
+      &quot;scale&quot;: &quot;ratio&quot;,
+      &quot;display&quot;: &quot;27.6%&quot;,
+      &quot;ref&quot;: &quot;[IS_2026-06.xlsx]Total!C21&quot;
+    }
+  ]
 }</pre></details></section><section class='call'><h2>5. calculate</h2><p class='args'>{&quot;operation&quot;: &quot;relative_change&quot;, &quot;cells&quot;: [{&quot;period&quot;: &quot;2026-03&quot;, &quot;row&quot;: &quot;Gross margin %&quot;, &quot;column&quot;: &quot;Quarter to Date Actual&quot;}, {&quot;period&quot;: &quot;2026-06&quot;, &quot;row&quot;: &quot;Gross margin %&quot;, &quot;column&quot;: &quot;Quarter to Date Actual&quot;}]}</p><details><summary>Tool result</summary><pre>{
   &quot;operation&quot;: &quot;relative_change&quot;,
   &quot;display&quot;: &quot;-1.6%&quot;,
@@ -316,11 +331,51 @@
       &quot;ref&quot;: &quot;[IS_2026-06.xlsx]Total!C21&quot;
     }
   ],
-  &quot;note&quot;: &quot;Relative change of a rate. The change in percentage points is -0.46 pts.&quot;
-}</pre></details></section><section class='final'><h2>Claude's answer</h2><pre class='answer'>Gross margin fell **1.6%** in relative terms from Q1 to Q2 2026 (inputs: [IS_2026-03.xlsx]Total!C21, [IS_2026-06.xlsx]Total!C21).
+  &quot;note&quot;: &quot;Relative change of a rate. The change in percentage points is -0.46 pts.&quot;,
+  &quot;snapshots&quot;: [
+    {
+      &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+      &quot;report&quot;: &quot;Income Statement&quot;,
+      &quot;snapshot&quot;: &quot;IS_2026-03.xlsx&quot;,
+      &quot;sha256&quot;: &quot;b3b152ac30b0&quot;,
+      &quot;period_end&quot;: &quot;2026-03-31&quot;,
+      &quot;scenario&quot;: &quot;Actual&quot;,
+      &quot;currency&quot;: &quot;USD&quot;,
+      &quot;scale&quot;: &quot;units&quot;,
+      &quot;amounts_as_printed&quot;: &quot;Amounts in US Dollars&quot;,
+      &quot;approved&quot;: &quot;Controller, 2026-04-09&quot;,
+      &quot;column_scope&quot;: {
+        &quot;Current Period Actual&quot;: &quot;March 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026 (the full fiscal quarter 1); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to March 31, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
+      &quot;data&quot;: &quot;synthetic demonstration data, not a real company&quot;
+    },
+    {
+      &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+      &quot;report&quot;: &quot;Income Statement&quot;,
+      &quot;snapshot&quot;: &quot;IS_2026-06.xlsx&quot;,
+      &quot;sha256&quot;: &quot;e42f0faa32be&quot;,
+      &quot;period_end&quot;: &quot;2026-06-30&quot;,
+      &quot;scenario&quot;: &quot;Actual&quot;,
+      &quot;currency&quot;: &quot;USD&quot;,
+      &quot;scale&quot;: &quot;units&quot;,
+      &quot;amounts_as_printed&quot;: &quot;Amounts in US Dollars&quot;,
+      &quot;approved&quot;: &quot;Controller, 2026-07-08&quot;,
+      &quot;column_scope&quot;: {
+        &quot;Current Period Actual&quot;: &quot;June 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Quarter to Date Actual&quot;: &quot;April 1, 2026 to June 30, 2026 (the full fiscal quarter 2); fiscal year starting January 1, as declared in approved.json&quot;,
+        &quot;Year to Date Actual&quot;: &quot;January 1, 2026 to June 30, 2026; fiscal year starting January 1, as declared in approved.json&quot;
+      },
+      &quot;data&quot;: &quot;synthetic demonstration data, not a real company&quot;
+    }
+  ]
+}</pre></details></section><section class='final'><h2>Claude's answer</h2><pre class='answer'>Gross margin fell from 28.1% in Q1 (Jan 1 – Mar 31, 2026) to 27.6% in Q2 (Apr 1 – Jun 30, 2026). Both figures are the Quarter to Date Actual column of the approved March and June exports.
 
-- **Q1 (Jan 1 – Mar 31):** 28.1% ([IS_2026-03.xlsx]Total!C21)
-- **Q2 (Apr 1 – Jun 30):** 27.6% ([IS_2026-06.xlsx]Total!C21)
-- **Change in percentage points:** -0.46 pts (inputs: [IS_2026-03.xlsx]Total!C21, [IS_2026-06.xlsx]Total!C21)
+- **Percentage points:** the rate fell -0.46 pts (inputs: [IS_2026-03.xlsx]Total!C21, [IS_2026-06.xlsx]Total!C21).
+- **Relative change:** that is a drop of -1.6% from the Q1 margin (inputs: [IS_2026-03.xlsx]Total!C21, [IS_2026-06.xlsx]Total!C21).
 
-If you meant the drop in points rather than the relative decline, the answer is -0.46 pts. These figures come from the quarter-to-date column of each quarter-end export. The exports show the size of the change, not why it happened.</pre></section></main></body></html>
+- **Q1 gross margin:** 28.1% ([IS_2026-03.xlsx]Total!C21)
+- **Q2 gross margin:** 27.6% ([IS_2026-06.xlsx]Total!C21)
+
+&quot;Percentage&quot; could mean either measure, so I&#x27;ve given both. The statements show the size of the change but not the reason for it. I can run a margin bridge by unit (rate versus mix) if you want to see where the movement sits.</pre></section></main></body></html>

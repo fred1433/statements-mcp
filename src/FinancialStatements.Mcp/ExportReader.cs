@@ -115,6 +115,8 @@ public static class ExportReader
                 if (found.Count >= 2) { headerRow = r; colIndex.AddRange(found); }
             }
             if (headerRow == 0) { problems.Add($"sheet \"{ws.Name}\": no column header row"); continue; }
+            foreach (var dup in colIndex.GroupBy(c => c.Name, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
+                problems.Add($"sheet \"{ws.Name}\": column \"{dup.Key}\" appears twice; ambiguous, nothing is chosen");
             sheet.Columns.AddRange(colIndex.Select(c => c.Name));
 
             int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
@@ -147,6 +149,8 @@ public static class ExportReader
                     : RowKind.Amount;
                 // A row whose cells are all blank is a section heading unless the row definition says otherwise;
                 // the snapshot checks decide whether a blank amount row is acceptable.
+                if (sheet.Rows.Any(x => x.Label.Equals(label, StringComparison.OrdinalIgnoreCase)))
+                    problems.Add($"sheet \"{ws.Name}\": row \"{label}\" appears twice (rows {sheet.Rows.First(x => x.Label.Equals(label, StringComparison.OrdinalIgnoreCase)).RowNumber} and {r}); ambiguous, nothing is chosen");
                 sheet.Rows.Add(new RowRead(label, kind, r));
                 foreach (var (col, read) in reads) sheet.Cells[(label, col)] = read;
             }
