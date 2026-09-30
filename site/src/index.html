@@ -18,7 +18,7 @@
 <main>
   <section class="hero" aria-labelledby="title">
     <div class="ask">
-      <h1 id="title">Ask the income statement. Every figure ties to its cell.</h1>
+      <h1 id="title">Ask the income statement. Every figure ties to its cells.</h1>
       <p class="lede">A read-only MCP server lets Claude read approved month-end exports, show the cell behind each figure, and stop when an export fails its checks.</p>
       <p class="synthetic">Synthetic demonstration. Workbook structure modeled on documented Management Reporter reporting concepts; not generated from your system or validated against your export layout.</p>
 
@@ -26,6 +26,7 @@
 
       <article class="answer" aria-live="polite">
         <div class="answer-meta"></div>
+        <div class="excerpt" hidden></div>
         <div class="answer-body"></div>
         <p class="answer-foot"></p>
       </article>
@@ -41,7 +42,7 @@
           <div class="sheet-tabs" role="tablist" aria-label="Reporting units"></div>
         </div>
       </div>
-      <p class="desk-hint">Select a tick mark in the answer to see the cell it points to.</p>
+      <p class="desk-hint"></p>
     </div>
   </section>
 
@@ -60,10 +61,10 @@
     <ol class="steps">
       <li><strong>Export and approve.</strong> The controller exports the report to Excel and lists the file in <code>approved.json</code> with its SHA-256 and a few control totals read off the rendered report.</li>
       <li><strong>Check before reading.</strong> The server refuses a file that changed after approval, misses a reporting unit, has totals that do not tie beyond the written rounding rule, or does not match its control totals.</li>
-      <li><strong>Ask in Claude.</strong> A C# server (.NET 10, official MCP C# SDK 2.2.0) packaged as a Claude Desktop extension. Five read tools; no write tool, no path, no SQL.</li>
+      <li><strong>Ask in Claude.</strong> A C# server (.NET 10, official MCP C# SDK 2.2.0), built for Claude Desktop as an extension package and tested with Claude Code as the MCP client. Six read tools, arithmetic included; no write tool, no path, no SQL.</li>
     </ol>
     <p><strong>Privacy.</strong> The connector runs locally and reads approved exports without modifying them. Returned figures and their report context are sent to Anthropic through Claude; your organization's Claude data policies apply.</p>
-    <p><strong>What this proves, and what it does not.</strong> This demonstrates the connector and its checks on synthetic data. Compatibility with your exports and diagnosis of your report errors require validation on your system. The conversations were recorded with Claude Code as the MCP client; the Windows package is built, not tested on a clean Windows machine.</p>
+    <p><strong>What this proves, and what it does not.</strong> This demonstrates the connector and its checks on synthetic data. Compatibility with your exports and diagnosis of your report errors require validation on your system. The conversations were recorded on September 30, 2026 with Claude Code as the MCP client; the extension package has not been installed in Claude Desktop yet, and the Windows package is built, not tested on a clean Windows machine.</p>
     <p class="next"><strong>Next check.</strong> One approved MR export and one failing report: reconcile the known totals, confirm the import mapping, and capture the error before making changes.</p>
     <p class="links"><a href="https://github.com/fred1433/statements-mcp">Source, tests and transcripts on GitHub</a></p>
 

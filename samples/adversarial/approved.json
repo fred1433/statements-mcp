@@ -12,6 +12,8 @@
   "currency": "USD",
   "scale": "units",
   "scenario": "Actual",
+  "fiscal_year_start_month": 1,
+  "synthetic": true,
   "row_definition": {
     "totals": [
       {

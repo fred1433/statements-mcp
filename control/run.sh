@@ -14,7 +14,7 @@ WORK=$(mktemp -d)
 mkdir -p "$OUT"
 MODEL="${CONTROL_MODEL:-sonnet}"
 SYSTEM="You are Claude, an AI assistant. The current date is Wednesday, September 30, 2026."
-TOOLS="mcp__financial-statements__list_snapshots mcp__financial-statements__get_values mcp__financial-statements__compare_periods mcp__financial-statements__margin_bridge mcp__financial-statements__get_report_comments"
+TOOLS="mcp__financial-statements__list_snapshots mcp__financial-statements__get_values mcp__financial-statements__compare_periods mcp__financial-statements__margin_bridge mcp__financial-statements__get_report_comments mcp__financial-statements__calculate"
 IDS="${*:-$(python3 -c 'import json; [print(q["id"]) for q in json.load(open("control/questions.json"))]')}"
 for id in $IDS; do
   q=$(python3 -c 'import json,sys; print(next(x["question"] for x in json.load(open("control/questions.json")) if x["id"]==sys.argv[1]))' "$id")

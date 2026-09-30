@@ -140,6 +140,8 @@ public class QueryTests
     {
         var r = St.GetValues("2026-06", "Online", new[] { "Gross profit" }, new[] { Q });
         foreach (var k in new[] { "company", "snapshot", "sha256", "period_end", "scenario", "currency", "scale", "approved", "column_scope" }) Assert.NotNull(r[k]);
-        Assert.Contains("the full Q2 2026", r["column_scope"]![Q]!.GetValue<string>());
+        Assert.Contains("the full fiscal quarter 2", r["column_scope"]![Q]!.GetValue<string>());
+        Assert.Equal("synthetic demonstration data, not a real company", r["data"]!.GetValue<string>());
+        Assert.Equal("Amounts in US Dollars", r["amounts_as_printed"]!.GetValue<string>());
     }
 }

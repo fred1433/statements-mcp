@@ -1,0 +1,172 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><meta name='robots' content='noindex, nofollow'><title>Transcript</title><link rel='icon' href='../favicon.svg' type='image/svg+xml'><link rel='stylesheet' href='../transcript.css'></head><body><main><p class='back'><a href='../'>Back to the demonstration</a></p><h1>“How much did we spend on travel in Q2?”</h1><p class='meta'>Recorded September 30, 2026 with Claude Code as the MCP client, model claude-sonnet-5-5. Every tool call and tool result, then Claude's answer, unedited. <a href='https://github.com/fred1433/statements-mcp/blob/main/control/transcripts/travel-q2.jsonl'>Raw file</a>.</p><section class='call'><h2>1. list_snapshots</h2><p class='args'>{}</p><details><summary>Tool result</summary><pre>{
+  &quot;company&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+  &quot;report&quot;: &quot;Income Statement&quot;,
+  &quot;reporting_tree&quot;: {
+    &quot;root&quot;: &quot;Alder &amp; Finch Supply Co.&quot;,
+    &quot;units&quot;: [
+      &quot;Wholesale&quot;,
+      &quot;Online&quot;,
+      &quot;Service&quot;
+    ]
+  },
+  &quot;currency&quot;: &quot;USD&quot;,
+  &quot;scenario&quot;: &quot;Actual&quot;,
+  &quot;columns&quot;: [
+    &quot;Current Period Actual&quot;,
+    &quot;Quarter to Date Actual&quot;,
+    &quot;Year to Date Actual&quot;
+  ],
+  &quot;rows&quot;: [
+    {
+      &quot;row&quot;: &quot;Product sales&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Service revenue&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Freight billed to customers&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Sales returns and allowances&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Net sales&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Product cost&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Service labor&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Inbound freight&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Inventory adjustments&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Total cost of sales&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Gross profit&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Gross margin %&quot;,
+      &quot;kind&quot;: &quot;rate&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Salaries and wages&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Payroll taxes and benefits&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Sales commissions&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Marketing and advertising&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Outbound shipping&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Rent and occupancy&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Software and technology&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Depreciation&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Other general and administrative&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Total operating expenses&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    },
+    {
+      &quot;row&quot;: &quot;Operating income&quot;,
+      &quot;kind&quot;: &quot;amount&quot;
+    }
+  ],
+  &quot;snapshots&quot;: [
+    {
+      &quot;period&quot;: &quot;2026-03&quot;,
+      &quot;file&quot;: &quot;IS_2026-03.xlsx&quot;,
+      &quot;period_end&quot;: &quot;2026-03-31&quot;,
+      &quot;approved&quot;: &quot;Controller, 2026-04-09&quot;,
+      &quot;sha256&quot;: &quot;b3b152ac30b0&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 12:59 -03:00&quot;,
+      &quot;status&quot;: &quot;usable&quot;,
+      &quot;failed_checks&quot;: null,
+      &quot;rounding_differences&quot;: 32
+    },
+    {
+      &quot;period&quot;: &quot;2026-06&quot;,
+      &quot;file&quot;: &quot;IS_2026-06.xlsx&quot;,
+      &quot;period_end&quot;: &quot;2026-06-30&quot;,
+      &quot;approved&quot;: &quot;Controller, 2026-07-08&quot;,
+      &quot;sha256&quot;: &quot;e42f0faa32be&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 12:59 -03:00&quot;,
+      &quot;status&quot;: &quot;usable&quot;,
+      &quot;failed_checks&quot;: null,
+      &quot;rounding_differences&quot;: 36
+    },
+    {
+      &quot;period&quot;: &quot;2026-08&quot;,
+      &quot;file&quot;: &quot;IS_2026-08.xlsx&quot;,
+      &quot;period_end&quot;: &quot;2026-08-31&quot;,
+      &quot;approved&quot;: &quot;Controller, 2026-09-09&quot;,
+      &quot;sha256&quot;: &quot;ab7aee56c590&quot;,
+      &quot;imported_at&quot;: &quot;2026-09-30 12:59 -03:00&quot;,
+      &quot;status&quot;: &quot;blocked&quot;,
+      &quot;failed_checks&quot;: [
+        &quot;IS_2026-08.xlsx: reporting unit \&quot;Service\&quot; is missing from the export&quot;
+      ],
+      &quot;rounding_differences&quot;: 0
+    }
+  ],
+  &quot;files_in_folder_not_approved&quot;: [],
+  &quot;data&quot;: &quot;synthetic demonstration data, not a real company&quot;,
+  &quot;fiscal_year_start&quot;: &quot;January 1 (declared in approved.json)&quot;,
+  &quot;notes&quot;: [
+    &quot;Each snapshot is one approved month-end export; the column_scope of each result says what its columns cover.&quot;,
+    &quot;When two approved exports cover the same period, the most recently approved one that passes its checks is served.&quot;,
+    &quot;Periods are written YYYY-MM.&quot;
+  ]
+}</pre></details></section><section class='final'><h2>Claude's answer</h2><pre class='answer'>The Q2 income statement doesn&#x27;t show a travel line, so I can&#x27;t give you a travel figure. The June 2026 export (Q2, approved by the Controller on 2026-07-08) is usable, but its operating expense rows are:
+
+- Salaries and wages
+- Payroll taxes and benefits
+- Sales commissions
+- Marketing and advertising
+- Outbound shipping
+- Rent and occupancy
+- Software and technology
+- Depreciation
+- Other general and administrative
+
+Travel is probably inside &quot;Other general and administrative&quot;, but the statements don&#x27;t break that line down. I won&#x27;t guess at a number. I also can&#x27;t tell you whether travel sits in that line or in another one.
+
+I can pull the Q2 quarter-to-date figure for &quot;Other general and administrative&quot;, overall or by unit (Wholesale, Online, Service). That would be an upper bound on travel, not the travel amount. A travel figure would have to come from the general ledger or an expense report.</pre></section></main></body></html>

@@ -238,6 +238,8 @@ def manifest(folder, entries):
         "currency": "USD",
         "scale": "units",
         "scenario": "Actual",
+        "fiscal_year_start_month": 1,
+        "synthetic": True,
         "row_definition": {
             "totals": [
                 {"total": "Net sales", "plus": REVENUE, "minus": []},

@@ -23,7 +23,13 @@ public sealed class SnapshotStore
         public List<string> RoundingNotes { get; } = new();
         public Dictionary<string, SheetRead> SheetsByUnit { get; } = new(StringComparer.OrdinalIgnoreCase);
         public DateTimeOffset ImportedAt { get; set; }
+        public string Scale { get; set; } = "";
+        public string Currency { get; set; } = "";
+        public int Order { get; init; }
+        /// <summary>Another approved export for the same period that is served instead of this one.</summary>
+        public string? ReplacedBy { get; set; }
         public bool Usable => Failures.Count == 0;
+        public bool Served => ReplacedBy is null;
     }
 
     public string Folder { get; }
@@ -45,14 +51,25 @@ public sealed class SnapshotStore
         if (!File.Exists(manifestPath)) throw new FileNotFoundException($"No approved.json in {folder}. Nothing will be read without it.");
         var store = new SnapshotStore(folder, Manifest.Load(manifestPath));
         var listed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int order = 0;
         foreach (var entry in store.Manifest.Snapshots)
         {
             listed.Add(entry.File);
-            store.Snapshots.Add(store.LoadOne(entry));
+            store.Snapshots.Add(store.LoadOne(entry, order++));
         }
         foreach (var f in Directory.EnumerateFiles(folder, "*.xlsx").Select(Path.GetFileName))
             if (f is not null && !listed.Contains(f) && !f.StartsWith("~$")) store.UnlistedFiles.Add(f);
-        store.Snapshots.Sort((a, b) => a.PeriodEnd.CompareTo(b.PeriodEnd));
+        var sorted = store.Snapshots.OrderBy(x => x.PeriodEnd).ThenBy(x => x.Order).ToList();
+        store.Snapshots.Clear();
+        store.Snapshots.AddRange(sorted);
+        // Several approved exports for one period (a re-export after a correction): serve the most recently
+        // approved one that passes its checks; if none passes, the most recently approved one, blocked.
+        foreach (var group in store.Snapshots.GroupBy(x => x.Id).Where(g => g.Count() > 1))
+        {
+            var byApproval = group.OrderByDescending(x => x.Entry.ApprovedOn, StringComparer.Ordinal).ThenByDescending(x => x.Order).ToList();
+            var served = byApproval.FirstOrDefault(x => x.Usable) ?? byApproval[0];
+            foreach (var other in group) if (other != served) other.ReplacedBy = served.Entry.File;
+        }
         return store;
     }
 
@@ -62,10 +79,10 @@ public sealed class SnapshotStore
         return Convert.ToHexString(SHA256.HashData(s)).ToLowerInvariant();
     }
 
-    Snapshot LoadOne(SnapshotEntry entry)
+    Snapshot LoadOne(SnapshotEntry entry, int order)
     {
-        var periodEnd = DateOnly.TryParse(entry.PeriodEnd, out var pe) ? pe : default;
-        var snap = new Snapshot { Entry = entry, Id = periodEnd.ToString("yyyy-MM"), PeriodEnd = periodEnd, ImportedAt = DateTimeOffset.Now };
+        var periodEnd = DateOnly.TryParse(entry.PeriodEnd, System.Globalization.CultureInfo.InvariantCulture, out var pe) ? pe : default;
+        var snap = new Snapshot { Entry = entry, Id = periodEnd.ToString("yyyy-MM"), PeriodEnd = periodEnd, ImportedAt = DateTimeOffset.Now, Order = order };
         var f = snap.Failures;
 
         // Access boundary: a manifest entry is a bare file name inside this folder, nothing else.
@@ -89,6 +106,17 @@ public sealed class SnapshotStore
             if (!s.Company.Equals(Manifest.Company, StringComparison.OrdinalIgnoreCase)) f.Add($"{entry.File}, sheet \"{s.Name}\": company is \"{s.Company}\", expected \"{Manifest.Company}\"");
             if (!s.Report.Equals(Manifest.Report, StringComparison.OrdinalIgnoreCase)) f.Add($"{entry.File}, sheet \"{s.Name}\": report is \"{s.Report}\", expected \"{Manifest.Report}\"");
             if (s.PeriodEnd != periodEnd) f.Add($"{entry.File}, sheet \"{s.Name}\": period ends {s.PeriodEnd:yyyy-MM-dd}, approved as {entry.PeriodEnd}");
+            var amounts = ExportReader.ParseAmounts(s.AmountsLine);
+            if (amounts is null)
+                f.Add($"{entry.File}, sheet \"{s.Name}\": the amounts line \"{s.AmountsLine}\" (row {Layout.AmountsRow}) does not state a recognized currency and scale");
+            else
+            {
+                if (!amounts.Value.Scale.Equals(Manifest.Scale, StringComparison.OrdinalIgnoreCase) || !amounts.Value.Currency.Equals(Manifest.Currency, StringComparison.OrdinalIgnoreCase))
+                    f.Add($"{entry.File}, sheet \"{s.Name}\": the export states \"{s.AmountsLine}\" ({amounts.Value.Scale}, {amounts.Value.Currency}) but the approved profile expects {Manifest.Scale}, {Manifest.Currency}");
+                if (snap.Scale != "" && snap.Scale != amounts.Value.Scale)
+                    f.Add($"{entry.File}: sheets state different scales");
+                snap.Scale = amounts.Value.Scale; snap.Currency = amounts.Value.Currency;
+            }
             if (!AllUnits.Contains(s.Unit, StringComparer.OrdinalIgnoreCase)) f.Add($"{entry.File}, sheet \"{s.Name}\": reporting unit \"{s.Unit}\" is not in the reporting tree");
             else snap.SheetsByUnit[s.Unit] = s;
             foreach (var cell in s.Cells.Values.Where(c => c.Problem is not null)) f.Add($"{entry.File}, sheet \"{s.Name}\": {cell.Problem}");
@@ -160,7 +188,12 @@ public sealed class SnapshotStore
                     var printed = V(s, rule.Row, col);
                     var num = V(s, rule.Numerator, col);
                     var den = V(s, rule.Denominator, col);
-                    if (printed is null || num is null || den is null || den == 0) continue;
+                    if (num is null || den is null || den == 0) continue;
+                    if (printed is null)
+                    {
+                        snap.Failures.Add($"{snap.Entry.File}, sheet \"{s.Name}\": \"{rule.Row}\" / {col} is blank although {rule.Numerator} and {rule.Denominator} are printed");
+                        continue;
+                    }
                     // Printed rates come from unrounded amounts; allow for the dollar rounding of the inputs.
                     double tol = 0.0005 + 1.0 / Math.Abs(den.Value);
                     if (Math.Abs(printed.Value - num.Value / den.Value) > tol)

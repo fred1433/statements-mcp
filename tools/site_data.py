@@ -9,6 +9,7 @@ recorded ones, the statements are the sample exports cell for cell.
     uv run tools/site_data.py
 """
 
+import html
 import json
 import re
 from pathlib import Path
@@ -147,6 +148,98 @@ def mark_citations(answer, refs):
     return text
 
 
+def figure_index(calls):
+    """display string -> list of (formula, refs) from every tool result of the conversation."""
+    idx = {}
+    def add(disp, formula, refs):
+        if isinstance(disp, str) and refs:
+            idx.setdefault(disp, []).append((formula, list(refs)))
+    def all_refs(o):
+        found = []
+        def rec(x):
+            if isinstance(x, dict):
+                for r in x.get("inputs", []) if isinstance(x.get("inputs"), list) else []:
+                    found.append(r)
+                for v in x.values():
+                    rec(v)
+            elif isinstance(x, list):
+                for v in x:
+                    rec(v)
+        rec(o)
+        return list(dict.fromkeys(found))
+
+    def walk(o, scope=None):
+        if isinstance(o, dict):
+            if "units" in o and "mix_effect_total" in o:
+                scope = all_refs(o)  # bridge totals: their inputs are every unit's inputs
+            if "formula" in o and isinstance(o.get("inputs"), list):
+                add(o.get("display"), o["formula"].split(";")[0], o["inputs"] or scope or [])
+                if isinstance(o.get("relative"), str):
+                    add(o["relative"], "(to - from) / |from|", o["inputs"])
+                m = re.search(r"([-+]?\d+\.\d+ pts)", o.get("note") or "")
+                if m:
+                    add(m[1], "to - from, in percentage points", o["inputs"])
+            elif isinstance(o.get("ref"), str) and "display" in o:
+                add(o["display"], "printed value", [o["ref"]])
+            for v in o.values():
+                walk(v, scope)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v, scope)
+    for c in calls:
+        try:
+            walk(json.loads(c["result"]))
+        except (TypeError, json.JSONDecodeError):
+            pass
+    return idx
+
+
+FIG = re.compile(r"(?<![\w.$,])([-+]?\$\d{1,3}(?:,\d{3})*(?:\.\d+)?|[-+]?\d+(?:\.\d+)?(?: pts|%))(?![\w])")
+
+
+def link_figures(text, idx):
+    """Wraps every figure not already followed by a cell citation in ⟪figure¦formula¦refs⟫, found by its exact
+    display string in the tool results. Returns the text and the figures that could not be linked."""
+    out, unlinked, pos = [], [], 0
+    for m in FIG.finditer(text):
+        if "⟦" in text[pos:m.start()] and "⟧" not in text[text.rfind("⟦", 0, m.start()):m.start()]:
+            continue  # inside a token
+        after = text[m.end():m.end() + 3]
+        if after.startswith(" ⟦"):
+            continue  # already cited to its cell
+        fig = m[1]
+        cands = idx.get(fig) or idx.get("+" + fig) or idx.get("-" + fig) or (idx.get(fig[1:]) if fig[0] in "+-" else None)
+        if not cands:
+            unlinked.append(fig)
+            continue
+        refs = list(dict.fromkeys(r for _, rs in cands for r in rs))
+        out.append(text[pos:m.start()])
+        out.append(f"⟪{fig}¦{cands[0][0]}¦{'|'.join(refs)}⟫")
+        pos = m.end()
+    out.append(text[pos:])
+    return "".join(out), unlinked
+
+
+def transcript_html(q, calls, answer):
+    e = lambda x: html.escape(str(x))
+    parts = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>"
+             f"<meta name='robots' content='noindex, nofollow'><title>Transcript</title><link rel='icon' href='../favicon.svg' type='image/svg+xml'>"
+             f"<link rel='stylesheet' href='../transcript.css'></head><body><main>"
+             f"<p class='back'><a href='../'>Back to the demonstration</a></p>"
+             f"<h1>“{e(q['question'])}”</h1>"
+             f"<p class='meta'>Recorded September 30, 2026 with Claude Code as the MCP client, model {e(q.get('model',''))}. Every tool call and tool result, then Claude's answer, unedited. <a href='https://github.com/fred1433/statements-mcp/blob/main/control/transcripts/{q['id']}.jsonl'>Raw file</a>.</p>"]
+    for i, c in enumerate(calls, 1):
+        try:
+            body = json.dumps(json.loads(c["result"]), indent=2, ensure_ascii=False)
+        except (TypeError, json.JSONDecodeError):
+            body = c["result"] or ""
+        parts.append(f"<section class='call{' error' if c['error'] else ''}'><h2>{i}. {e(c['tool'])}{' (refused)' if c['error'] else ''}</h2>"
+                     f"<p class='args'>{e(json.dumps(c['input'], ensure_ascii=False))}</p>"
+                     f"<details><summary>Tool result</summary><pre>{e(body)}</pre></details></section>")
+    parts.append(f"<section class='final'><h2>Claude's answer</h2><pre class='answer'>{e(answer)}</pre></section></main></body></html>")
+    return "".join(parts)
+
+
 def main():
     results = json.loads((ROOT / "control/results.json").read_text())
     scenes = []
@@ -160,10 +253,13 @@ def main():
                 for s in json.loads(c["result"])["snapshots"]:
                     if s["status"] == "blocked":
                         blocked.append({"file": s["file"], "failed_checks": s["failed_checks"]})
+        marked = mark_citations(answer, refs)
+        linked, unlinked = link_figures(marked, figure_index(calls))
+        print(f"{qid}: figures without a cell or formula link: {unlinked}")
         scenes.append({
-            "id": qid, "label": label, "question": q["question"], "answer": mark_citations(answer, refs),
+            "id": qid, "label": label, "question": q["question"], "answer": linked, "unlinked": unlinked,
             "tools": [c["tool"] for c in calls], "blocked": blocked,
-            "transcript": REPO + f"control/transcripts/{qid}.jsonl",
+            "transcript": f"transcripts/{qid}.html",
         })
     rs = results["results"]
     summary = {
@@ -181,7 +277,12 @@ def main():
     ledger = [{"id": r["id"], "question": r["question"], "expect": r["expect"], "class": r["class"],
                "behavior": (r["behavior"] or {}).get("behavior"), "why": (r["behavior"] or {}).get("why"),
                "figures": r["figures_in_answer"], "untraced": len(r["untraced_figures"]),
-               "transcript": REPO + f"control/transcripts/{r['id']}.jsonl"} for r in rs]
+               "transcript": f"transcripts/{r['id']}.html"} for r in rs]
+    tdir = OUT.parent / "transcripts"
+    tdir.mkdir(exist_ok=True)
+    for r in rs:
+        calls, answer = transcript(r["id"])
+        (tdir / f"{r['id']}.html").write_text(transcript_html(r, calls, answer))
     data = {
         "scenes": scenes,
         "workbooks": {f: sheets(f) for f in ["IS_2026-03.xlsx", "IS_2026-06.xlsx", "IS_2026-08.xlsx"]},
@@ -189,8 +290,7 @@ def main():
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
-    for s in scenes:
-        print("==", s["id"]); print(s["answer"][:1800])
+
 
 
 if __name__ == "__main__":

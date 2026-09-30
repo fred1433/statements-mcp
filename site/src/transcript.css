@@ -1,0 +1,12 @@
+body { margin: 0; background: #E3E6E0; color: #1C2430; font-family: "Libre Franklin", Arial, sans-serif; font-size: 15px; line-height: 1.5; }
+main { max-width: 900px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-family: Georgia, serif; font-style: italic; font-weight: 400; color: #22408C; font-size: 26px; line-height: 1.25; margin: 8px 0 10px; }
+h2 { font-size: 15px; margin: 0 0 6px; }
+.meta, .back { color: #5A6472; font-size: 13.5px; }
+a { color: #22408C; }
+section { background: #fff; border-radius: 6px; padding: 14px 18px; margin: 12px 0; }
+section.error h2 { color: #B3372C; }
+.args { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; color: #5A6472; margin: 0 0 6px; overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; background: #F6F7F4; padding: 10px; border-radius: 4px; max-height: 480px; overflow: auto; }
+pre.answer { font-family: Georgia, serif; font-size: 15.5px; background: none; padding: 0; max-height: none; }
+summary { cursor: pointer; color: #22408C; font-size: 13.5px; }

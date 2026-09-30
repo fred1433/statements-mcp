@@ -22,6 +22,7 @@ public static class ExportReader
         public const int ReportRow = 2;
         public const int PeriodRow = 3;   // "For the Period Ending June 30, 2026"
         public const int UnitRow = 4;     // "Reporting Unit: Wholesale"
+        public const int AmountsRow = 5;  // "Amounts in US Dollars" / "Amounts in Thousands of US Dollars"
         public const int LabelColumn = 1;
         public const int MaxHeaderScan = 12;
         public const string CommentsHeading = "Report comments";
@@ -42,6 +43,7 @@ public static class ExportReader
         public required string Report { get; init; }
         public required DateOnly PeriodEnd { get; init; }
         public required string Unit { get; init; }
+        public required string AmountsLine { get; init; }
         public List<string> Columns { get; } = new();
         public List<RowRead> Rows { get; } = new();
         public Dictionary<(string Row, string Column), CellRead> Cells { get; } = new();
@@ -66,6 +68,18 @@ public static class ExportReader
         return v.IsBlank ? "" : v.ToString(CultureInfo.InvariantCulture).Trim();
     }
 
+    /// <summary>
+    /// The currency and scale a sheet states in its header ("Amounts in Thousands of US Dollars").
+    /// Null when the line is missing or not one of the forms below: the snapshot is then blocked.
+    /// </summary>
+    public static (string Currency, string Scale)? ParseAmounts(string line)
+    {
+        var m = Regex.Match(line.Trim(), @"^Amounts in (?:(Thousands|Millions) of )?(US Dollars|USD)$", RegexOptions.IgnoreCase);
+        if (!m.Success) return null;
+        string scale = m.Groups[1].Success ? m.Groups[1].Value.ToLowerInvariant() : "units";
+        return ("USD", scale);
+    }
+
     public static WorkbookRead Read(string path)
     {
         var problems = new List<string>();
@@ -84,10 +98,11 @@ public static class ExportReader
                 continue;
             }
 
-            var sheet = new SheetRead { Name = ws.Name, Company = company, Report = report, PeriodEnd = period.Value, Unit = unit };
+            string amounts = Text(ws.Cell(Layout.AmountsRow, Layout.LabelColumn));
+            var sheet = new SheetRead { Name = ws.Name, Company = company, Report = report, PeriodEnd = period.Value, Unit = unit, AmountsLine = amounts };
             int headerRow = 0;
             var colIndex = new List<(int Index, string Name)>();
-            for (int r = Layout.UnitRow + 1; r <= Layout.MaxHeaderScan && headerRow == 0; r++)
+            for (int r = Layout.AmountsRow + 1; r <= Layout.MaxHeaderScan && headerRow == 0; r++)
             {
                 var found = new List<(int, string)>();
                 int last = ws.Row(r).LastCellUsed()?.Address.ColumnNumber ?? 0;

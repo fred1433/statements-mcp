@@ -5,7 +5,8 @@ account_id = "4e079f3de44bde5cb2ea41dc8db3c926"
 compatibility_date = "2026-09-01"
 workers_dev = false
 routes = [
-  { pattern = "theaipipe.com/ask-your-financials*", zone_name = "theaipipe.com" }
+  { pattern = "theaipipe.com/ask-your-financials", zone_name = "theaipipe.com" },
+  { pattern = "theaipipe.com/ask-your-financials/*", zone_name = "theaipipe.com" }
 ]
 
 [assets]

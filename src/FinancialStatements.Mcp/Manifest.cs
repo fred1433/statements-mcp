@@ -20,6 +20,13 @@ public sealed record Manifest(
     RoundingPolicy RoundingPolicy,
     List<SnapshotEntry> Snapshots)
 {
+    /// <summary>First month (1-12) of the fiscal year, declared by the controller. Without it, the server does not
+    /// write the start date of a quarter or year to date: Management Reporter follows the ledger's fiscal calendar.</summary>
+    public int? FiscalYearStartMonth { get; init; }
+
+    /// <summary>True for the demonstration folder shipped with the server, so every answer can say so.</summary>
+    public bool Synthetic { get; init; }
+
     static readonly JsonSerializerOptions Options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,

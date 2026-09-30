@@ -154,6 +154,23 @@ def walk_tool_result(obj, folder, t, is_error):
                 if obj.get("relative") and a:
                     rel = abs(d / abs(a) * 100)
                     t.percents.append(rel); t.derive(inputs, rel)
+        elif formula == "sum of inputs":
+            total = sum(cell_at(folder, r)[0] for r in inputs)
+            if abs(total - v) > 1e-6 or fmt_amount(total) != disp:
+                t.problems.append(f"sum {disp!r} from {inputs}, recomputed {total}")
+            t.recomputed += 1
+            t.dollars.append(abs(total)); t.derive(inputs, abs(total))
+        elif formula == "(to - from) / |from|" and len(inputs) == 2:
+            a, _ = cell_at(folder, inputs[0])
+            b, _ = cell_at(folder, inputs[1])
+            rel = (b - a) / abs(a)
+            if abs(rel - v) > 1e-9:
+                t.problems.append(f"relative change {disp!r} from {inputs}, recomputed {rel}")
+            t.recomputed += 1
+            t.percents.append(abs(rel * 100)); t.derive(inputs, abs(rel * 100))
+            m = re.search(r"([-+]?\d+\.\d+) pts", obj.get("note") or "")
+            if m:
+                t.points.append(abs(float(m[1])))
         elif re.fullmatch(r"[A-Za-z ]+ / [A-Za-z ]+", formula) and len(inputs) == 2:
             n, _ = cell_at(folder, inputs[0])
             d, _ = cell_at(folder, inputs[1])
@@ -241,6 +258,13 @@ def citations(answer, t):
         out.append({"file": m[1], "sheet": m[2], "cell": m[3], "start": m.start(), "end": m.end(), "group": g})
         for extra in re.findall(r"[A-Z]{1,3}\d{1,5}", m[4] or ""):
             out.append({"file": m[1], "sheet": m[2], "cell": extra, "start": m.start(), "end": m.end(), "group": g})
+    # Citations separated only by commas or "and" (one parenthetical listing several cells) form one group.
+    for prev, cur in zip(out, out[1:]):
+        if cur["group"] != prev["group"] and re.fullmatch(r"[\s,;`]*(?:and)?[\s`]*", answer[prev["end"]:cur["start"]]):
+            old = cur["group"]
+            for c in out:
+                if c["group"] == old:
+                    c["group"] = prev["group"]
     return out
 
 
@@ -277,7 +301,7 @@ def check(q, path=None):
     for g in sorted({c["group"] for c in cites}):
         members = [c for c in cites if c["group"] == g]
         before = [n for n in numbers(blanked[prev_end:members[0]["start"]])]
-        prev_end = members[0]["end"]
+        prev_end = max(c["end"] for c in members)
         if not before:
             continue
         last = before[-1]

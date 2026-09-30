@@ -15,8 +15,16 @@
   const TICK = '<svg viewBox="0 0 17 15" aria-hidden="true"><path d="M2.5 8.2 L6.4 12 L14.6 2.6"/></svg>';
 
   // ---------- markdown (the subset Claude used) ----------
+  const refLabel = (r) => r.replace(/^\[IS_(\d{4})-(\d{2})\.xlsx\](.+)!([A-Z]+\d+)$/, (m, y, mo, sh, c) => `${bookLabel(`IS_${y}-${mo}.xlsx`)}, ${sh}!${c}`);
+  let stash = [];
   function inline(s) {
+    s = s.replace(/\u0001(\d+)\u0001/g, (_, n) => stash[+n]);
     return esc(s)
+      .replace(/⟪([^¦⟫]+)¦([^¦⟫]*)¦([^⟫]+)⟫/g, (_, fig, formula, refs) => {
+        const what = formula === "printed value" ? "Printed value" : `Computed: ${formula}`;
+        const label = `${what}. ${refs.split("|").map(refLabel).join("; ")}`;
+        return `<button class="fig" type="button" data-refs="${refs}" data-formula="${esc(formula)}" aria-pressed="false" title="${esc(label)}">${fig}</button>`;
+      })
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/`([^`]+)`/g, "<code>$1</code>")
       .replace(/ ?⟦([^⟧]+)⟧/g, (_, refs) => {
@@ -25,6 +33,9 @@
       });
   }
   function markdown(md) {
+    // Tokens contain "|" (cell lists, formulas): park them so table rows split on real column bars only.
+    stash = [];
+    md = md.replace(/⟪[^⟫]*⟫|⟦[^⟧]*⟧/g, (t) => `\u0001${stash.push(t) - 1}\u0001`);
     const lines = md.split("\n");
     let html = "", i = 0;
     while (i < lines.length) {
@@ -79,21 +90,25 @@
     qBox.querySelectorAll(".q").forEach((b, k) => b.setAttribute("aria-selected", String(k === n)));
     $(".answer-meta").textContent = `Claude's recorded answer, after ${s.tools.length} tool calls: ${[...new Set(s.tools)].join(", ")}.`;
     $(".answer-body").innerHTML = markdown(s.answer);
-    $(".answer-foot").innerHTML = `Unedited, except that cell references are shown as tick marks. <a href="${s.transcript}">Full transcript with every tool result</a>.`;
-    $(".answer-body").querySelectorAll(".tick").forEach((t) => t.addEventListener("click", () => pick(t)));
+    $(".answer-foot").innerHTML = `Recorded September 30, 2026. Unedited, except that cell references are shown as tick marks and computed figures link to their formula and input cells. <a href="${s.transcript}">Full transcript with every tool result</a>.`;
+    $(".answer-body").querySelectorAll(".tick, .fig").forEach((t) => t.addEventListener("click", () => pick(t)));
     const ticks = [...$(".answer-body").querySelectorAll(".tick")];
     // Open on the rate the question is about when the answer cites it, else on the first citation.
     const first = ticks.filter((t) => /IS_2026-06\.xlsx\]Total!C21$/.test(t.dataset.refs)).pop() || ticks[0];
-    if (!first && s.blocked.length) { state.hits = new Set(); state.book = s.blocked[0].file; state.sheet = "Total"; state.swipe = false; render(); }
+    if (!first && s.blocked.length) { state.hits = new Set(); state.why = ""; state.book = s.blocked[0].file; state.sheet = "Total"; state.swipe = false; render(); }
     else if (first) pick(first, true);
     else render();
   }
 
   function pick(tick, quiet) {
-    document.querySelectorAll(".tick").forEach((t) => t.setAttribute("aria-pressed", "false"));
+    document.querySelectorAll(".tick, .fig").forEach((t) => t.setAttribute("aria-pressed", "false"));
     tick.setAttribute("aria-pressed", "true");
     const refs = tick.dataset.refs.split("|");
     state.hits = new Set(refs);
+    const formula = tick.dataset.formula;
+    state.why = !formula ? `Cells cited in the answer: ${refs.map(refLabel).join("; ")}.`
+      : formula === "printed value" ? `Printed in ${refs.map(refLabel).join("; ")}.`
+      : `Computed by the server: ${formula}. Input cells: ${refs.map(refLabel).join("; ")}.`;
     const last = refs[refs.length - 1].match(/^\[(.+?)\](.+)!([A-Z]+\d+)$/);
     state.book = last[1]; state.sheet = last[2]; state.swipe = !quiet;
     render();
@@ -153,6 +168,15 @@
       else { t.disabled = true; t.title = "Not in this export"; }
       tabs.appendChild(t);
     }
+    $(".desk-hint").textContent = state.why || "Select a tick mark or a figure in the answer to see the cells behind it.";
+    // Small screens: the cited cells, repeated at the top of the answer so question, answer and cell show together.
+    const ex = $(".excerpt");
+    const hitRows = sheet.rows.filter((r) => r.cells.some((c) => state.hits.has(refOf(c.addr))));
+    ex.innerHTML = hitRows.length ? `<p>${esc(bookLabel(state.book))}, ${esc(sheet.name)} sheet</p>` + hitRows.map((r) => {
+      const cells = r.cells.map((c, k) => ({ c, col: sheet.columns[k] })).filter(({ c }) => state.hits.has(refOf(c.addr)));
+      return cells.map(({ c, col }) => `<div class="ex-row"><span>${esc(r.label)}, ${esc(col)}</span><span class="ex-v">${esc(c.display)}</span></div>`).join("");
+    }).join("") : "";
+    ex.hidden = !hitRows.length;
     const hit = $(".statement td.hit");
     if (hit && state.swipe) hit.scrollIntoView({ block: "nearest", inline: "nearest" });
   }

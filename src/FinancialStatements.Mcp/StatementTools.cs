@@ -5,7 +5,7 @@ using ModelContextProtocol.Server;
 
 namespace FinancialStatements.Mcp;
 
-/// <summary>Five read tools. No write tool, no path argument, no free-form query.</summary>
+/// <summary>Six read tools. No write tool, no path argument, no free-form query.</summary>
 [McpServerToolType]
 public sealed class StatementTools(StoreProvider provider)
 {
@@ -45,6 +45,13 @@ public sealed class StatementTools(StoreProvider provider)
         [Description("Later snapshot, YYYY-MM")] string period_to,
         [Description("Column name, for example Quarter to Date Actual")] string column)
         => Run(() => provider.Statements.MarginBridge(period_from, period_to, column, null));
+
+    [McpServerTool(Name = "calculate", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false),
+     Description("Arithmetic on printed cells: sum (two cells or more), share (part, whole), difference (from, to), relative_change (from, to). Returns the result with its formula, input cells and their printed values. Use it instead of computing figures yourself.")]
+    public string Calculate(
+        [Description("sum, share, difference or relative_change")] string operation,
+        [Description("Input cells, in order; each has period (YYYY-MM), row, column and optional unit (omit for the company total)")] CellSpec[] cells)
+        => Run(() => provider.Statements.Calculate(operation, cells));
 
     [McpServerTool(Name = "get_report_comments", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false),
      Description("Comments written into an approved report by its author, with their cell references. Commentary, not figures, and not verified.")]
