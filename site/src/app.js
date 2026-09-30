@@ -20,10 +20,10 @@
   function inline(s) {
     s = s.replace(/\u0001(\d+)\u0001/g, (_, n) => stash[+n]);
     return esc(s)
-      .replace(/⟪([^¦⟫]+)¦([^¦⟫]*)¦([^⟫]+)⟫/g, (_, fig, formula, refs) => {
+      .replace(/⟪([^¦⟫]+)¦([^¦⟫]*)¦([^¦⟫]+)¦([^⟫]*)⟫/g, (_, fig, formula, refs, num) => {
         const what = formula === "printed value" ? "Printed value" : `Computed: ${formula}`;
         const label = `${what}. ${refs.split("|").map(refLabel).join("; ")}`;
-        return `<button class="fig" type="button" data-refs="${refs}" data-formula="${esc(formula)}" aria-pressed="false" title="${esc(label)}">${fig}</button>`;
+        return `<button class="fig" type="button" data-refs="${refs}" data-numerator="${num}" data-formula="${esc(formula)}" aria-pressed="false" title="${esc(label)}">${fig}</button>`;
       })
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/`([^`]+)`/g, "<code>$1</code>")
@@ -32,6 +32,7 @@
         return `<button class="tick" type="button" data-refs="${refs}" aria-pressed="false" aria-label="Show cell: ${esc(label)}" title="${esc(label)}">${TICK}</button>`;
       });
   }
+  const keepParens = (html) => html.replace(/\((<button class="fig"[^>]*>[^<]*<\/button>)\)/g, '<span class="nw">($1)</span>');
   function markdown(md) {
     // Tokens contain "|" (cell lists, formulas): park them so table rows split on real column bars only.
     stash = [];
@@ -92,10 +93,10 @@
     const ed = $(".editor");
     ed.hidden = !s.editor_note;
     ed.textContent = s.editor_note ? `Editor's note, not part of the recording: ${s.editor_note}` : "";
-    $(".how summary").textContent = `How Claude got this: ${s.tools.length} tool calls`;
+    $(".how summary").textContent = `How Claude got this: ${s.tools.length} tool call${s.tools.length === 1 ? "" : "s"}`;
     $(".answer-meta").textContent = s.tools.join(", ") + ".";
     $(".asked").after($(".excerpt"));
-    $(".answer-body").innerHTML = markdown(s.answer);
+    $(".answer-body").innerHTML = keepParens(markdown(s.answer));
     $(".answer-foot").innerHTML = `Recorded September 30, 2026. Claude's answer, unedited, except that cell references are shown as tick marks and computed figures link to their formula and input cells. Changes use underlying cell precision. <a href="${s.transcript}">Full transcript with every tool result</a>.`;
     $(".answer-body").querySelectorAll(".tick, .fig").forEach((t) => t.addEventListener("click", () => pick(t)));
     const ticks = [...$(".answer-body").querySelectorAll(".tick")];
@@ -112,10 +113,26 @@
     const refs = tick.dataset.refs.split("|");
     state.hits = new Set(refs);
     const formula = tick.dataset.formula;
-    state.why = !formula ? `Cells cited in the answer: ${refs.map(refLabel).join("; ")}.`
-      : formula === "printed value" ? `Printed in ${refs.map(refLabel).join("; ")}.`
-      : `Computed by the server: ${formula}. Input cells: ${refs.map(refLabel).join("; ")}.`;
-    const last = refs[refs.length - 1].match(/^\[(.+?)\](.+)!([A-Z]+\d+)$/);
+    const num = tick.dataset.numerator;
+    const list = (rs) => rs.map(refLabel).join("; ");
+    // The cell to open: the numerator of a share, the part of a part / whole, the later value of a change.
+    let focus = refs[refs.length - 1];
+    if (num) {
+      focus = num;
+      state.why = `Computed by the server: ${formula}. Numerator: ${refLabel(num)}. Denominator: the sum of ${list(refs)}.`;
+    } else if (formula && formula.startsWith("part")) {
+      focus = refs[0];
+      state.why = `Computed by the server: ${formula}. Part: ${refLabel(refs[0])}. Whole: ${refLabel(refs[1])}.`;
+    } else if (formula && /to - from/.test(formula) && refs.length === 2) {
+      state.why = `Computed by the server: ${formula}. From: ${refLabel(refs[0])}. To: ${refLabel(refs[1])}.`;
+    } else if (formula === "printed value") {
+      state.why = `Printed in ${list(refs)}.`;
+    } else if (formula) {
+      state.why = `Computed by the server: ${formula}. Input cells: ${list(refs)}.`;
+    } else {
+      state.why = `Cells cited in the answer: ${list(refs)}.`;
+    }
+    const last = focus.match(/^\[(.+?)\](.+)!([A-Z]+\d+)$/);
     state.book = last[1]; state.sheet = last[2]; state.swipe = !quiet;
     render();
     // Small screens: the evidence goes right under the block holding the figure.
@@ -145,7 +162,7 @@
     const refOf = (addr) => `[${state.book}]${sheet.name}!${addr}`;
     let html = "<thead><tr><th scope=\"col\" style=\"text-align:left\"></th>" + sheet.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("") + "</tr></thead><tbody>";
     for (const r of sheet.rows) {
-      const cls = r.kind === "section" ? "section" : r.kind === "percent" ? "percent" : r.bold ? "total" : "line";
+      const cls = r.kind === "section" ? (r.bold ? "section" : "line") : r.kind === "percent" ? "percent" : r.bold ? "total" : "line";
       html += `<tr class="${cls}"><td class="label"><span class="rowno">${r.row}</span>${esc(r.label)}</td>` +
         r.cells.map((c) => state.hits.has(refOf(c.addr))
           ? `<td class="hit${state.swipe ? " swipe" : ""}" data-addr="${c.addr}">${esc(c.display)}<span class="tie" title="Cited in the answer">${TICK}</span></td>`

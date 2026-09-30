@@ -9,7 +9,7 @@ Synthetic demonstration. Workbook structure modeled on documented Management Rep
 - Reads only the Excel exports listed in `approved.json` (file name, SHA-256, who approved it, control totals read off the rendered report). No path argument, no SQL, no write tool.
 - Reads the values stored in the cells and never recalculates a formula. A formula with no stored value blocks the export.
 - Blocks an export that changed after approval, states a currency or scale other than the approved profile's ("Amounts in Thousands of US Dollars" against a profile in dollars), misses a reporting unit, has totals that do not tie to their lines or units beyond the written rounding policy, leaves a printed rate blank or prints one that does not match its inputs, or does not match its control totals. A blocked export is never replaced by another period silently; an older usable one is offered as such.
-- When a corrected export for the same period is approved later, the most recently approved one that passes its checks is served; the other is listed as replaced.
+- When a corrected export for the same period is approved later, the most recent approval is authoritative. If it fails its checks the period is blocked; the older approval is not served, only mentioned with a warning.
 - Writes the start date of a quarter or a year to date only from a fiscal year start declared in `approved.json`; without it, it says the start date is not declared. Management Reporter follows the ledger's fiscal calendar, which the export does not state.
 - Returns every printed value with its cell (`[IS_2026-06.xlsx]Total!C13`), its scale as read from the export, and snapshot context (company, period end, column scope, scenario, currency, SHA-256, approval). Computed values (changes, shares, sums, relative changes, the margin bridge) come with their formula and input cells, so Claude does no arithmetic of its own.
 - `margin_bridge` splits a change in the company's gross margin rate into a rate effect and a mix effect. In the sample, every unit's margin rises from Q1 to Q2 while the company's falls 0.46 points, because sales shift toward the lowest-margin unit.
@@ -47,6 +47,7 @@ Built for Claude Desktop; tested with Claude Code as the MCP client. Checked: th
 - Ambiguity is rejected, never resolved: a row, a column header or a reporting-unit sheet that appears twice blocks the export.
 - A blank amount counts as zero only when its whole row is blank on that sheet (a suppressed zero row); a row blank in some columns only blocks the export.
 - Supported calendar: monthly fiscal periods ending on calendar month-ends, with the fiscal year start declared in `approved.json`. A period ending elsewhere blocks the export; 4-4-5 calendars are not supported.
+- Overlapping windows: `calculate` refuses to add two cells of the same row and unit whose periods overlap (a quarter to date and a year to date, for example).
 - Versions: when two approved exports cover one period, the newest approval is authoritative. If it fails its checks the period is blocked, and the older approval is only offered with a warning.
 - The workbook layout (header rows, one sheet per reporting unit) is modeled, not taken from a real export: `ExportReader.cs` is where a real layout is mapped.
 

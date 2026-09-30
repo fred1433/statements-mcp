@@ -155,9 +155,9 @@ def mark_citations(answer, refs):
 def figure_index(calls):
     """display string -> list of (formula, refs) from every tool result of the conversation."""
     idx = {}
-    def add(disp, formula, refs):
+    def add(disp, formula, refs, first=None):
         if isinstance(disp, str) and refs:
-            idx.setdefault(disp, []).append((formula, list(refs)))
+            idx.setdefault(disp, []).append((formula, list(refs), first))
     def all_refs(o):
         found = []
         def rec(x):
@@ -175,7 +175,7 @@ def figure_index(calls):
     def walk(o, scope=None):
         if isinstance(o, dict):
             if "formula" in o and isinstance(o.get("inputs"), list):
-                add(o.get("display"), o["formula"].split(";")[0], o["inputs"])
+                add(o.get("display"), o["formula"].split(";")[0], o["inputs"], o.get("numerator"))
                 if isinstance(o.get("relative"), str):
                     add(o["relative"], "(to - from) / |from|", o["inputs"])
                 m = re.search(r"([-+]?\d+\.\d+ pts)", o.get("note") or "")
@@ -214,9 +214,11 @@ def link_figures(text, idx):
         if not cands:
             unlinked.append(fig)
             continue
-        refs = list(dict.fromkeys(r for _, rs in cands for r in rs))
+        formula, refs, numerator = cands[0][0], list(cands[0][1]), cands[0][2]
+        if formula == "printed value":
+            refs = list(dict.fromkeys(r for _, rs, _ in cands for r in rs))
         out.append(text[pos:m.start()])
-        out.append(f"⟪{fig}¦{cands[0][0]}¦{'|'.join(refs)}⟫")
+        out.append(f"⟪{fig}¦{formula}¦{'|'.join(refs)}¦{numerator or ''}⟫")
         pos = m.end()
     out.append(text[pos:])
     return "".join(out), unlinked

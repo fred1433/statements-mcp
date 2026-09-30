@@ -202,4 +202,12 @@ public class ReviewFixesTests
         var midMonth = Folder((d, m) => { EditJune(d, ws => ws.Cell("A3").Value = "For the Period Ending June 27, 2026"); m["snapshots"]![1]!["period_end"] = "2026-06-27"; });
         Assert.Contains(SnapshotStore.Load(midMonth).Snapshots.Single(s => s.Entry.File == "IS_2026-06.xlsx").Failures, f => f.Contains("not on a calendar month-end"));
     }
+
+    [Fact]
+    public void Calculate_refuses_to_add_overlapping_periods()
+    {
+        Assert.Equal("overlapping_periods", Assert.Throws<QueryException>(() => St.Calculate("sum", new[] { C("2026-06", "Net sales"), C("2026-06", "Net sales", column: "Year to Date Actual") })).Code);
+        Assert.Equal("overlapping_periods", Assert.Throws<QueryException>(() => St.Calculate("sum", new[] { C("2026-03", "Net sales", column: "Year to Date Actual"), C("2026-06", "Net sales", column: "Year to Date Actual") })).Code);
+        Assert.Equal("$12,769,721", St.Calculate("sum", new[] { C("2026-03", "Net sales"), C("2026-06", "Net sales") })["display"]!.GetValue<string>()); // Q1 + Q2: disjoint
+    }
 }

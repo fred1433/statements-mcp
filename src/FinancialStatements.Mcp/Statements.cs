@@ -381,6 +381,17 @@ public sealed class Statements(SnapshotStore store)
                     if (inputs.Any(y => y.p.Unit != root && y.p.Row == x.p.Row && y.p.Column == x.p.Column && y.snap == x.snap))
                         throw new QueryException("double_count", $"The company total already includes its reporting units; adding {x.p.Row} for both counts the units twice.");
                 if (inputs.Select(x => x.p.Ref).Distinct().Count() != inputs.Count) throw new QueryException("double_count", "The same cell is listed twice.");
+                for (int i = 0; i < inputs.Count; i++)
+                    for (int j = i + 1; j < inputs.Count; j++)
+                    {
+                        var (a, b) = (inputs[i], inputs[j]);
+                        if (a.p.Row != b.p.Row || a.p.Unit != b.p.Unit) continue;
+                        var wa = Window(a.snap.PeriodEnd, a.p.Column);
+                        var wb = Window(b.snap.PeriodEnd, b.p.Column);
+                        bool overlap = wa is null || wb is null || (wa.Value.Start <= wb.Value.End && wb.Value.Start <= wa.Value.End);
+                        if (overlap)
+                            throw new QueryException("overlapping_periods", $"{a.p.Row} for {a.p.Unit}: {a.p.Column} ({a.snap.Id}) and {b.p.Column} ({b.snap.Id}) cover overlapping months" + (wa is null || wb is null ? " or their start dates are not declared" : "") + "; adding them counts those months twice.");
+                    }
                 double v = inputs.Sum(x => x.p.Value!.Value);
                 return Result(Format.Amount(v) + ScaleWord(scale), v, "sum of inputs");
             }
@@ -413,6 +424,18 @@ public sealed class Statements(SnapshotStore store)
             default:
                 throw new QueryException("unknown_operation", $"Unknown operation \"{operation}\".", new JsonObject { ["operations"] = Arr(new[] { "sum", "share", "difference", "relative_change" }) });
         }
+    }
+
+    /// <summary>First and last month covered by a column, from the declared fiscal year start; null when it cannot be known.</summary>
+    (DateOnly Start, DateOnly End)? Window(DateOnly end, string column)
+    {
+        var month = new DateOnly(end.Year, end.Month, 1);
+        if (column.Contains("Current Period", StringComparison.OrdinalIgnoreCase)) return (month, month);
+        if (M.FiscalYearStartMonth is not int fy) return null;
+        int into = ((end.Month - fy) % 12 + 12) % 12;
+        if (column.Contains("Quarter to Date", StringComparison.OrdinalIgnoreCase)) return (month.AddMonths(-(into % 3)), month);
+        if (column.Contains("Year to Date", StringComparison.OrdinalIgnoreCase)) return (month.AddMonths(-into), month);
+        return null;
     }
 
     // ---------- helpers ----------
